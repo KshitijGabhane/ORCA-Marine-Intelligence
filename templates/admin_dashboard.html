@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>ORCA Admin Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+        'static',
+        filename='css/dashboard.css'
+        ) }}"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <span class="brand-name">
+            ORCA
+        </span>
+
+        <span class="brand-subtitle">
+            System Administration
+        </span>
+
+    </div>
+
+
+    <div class="user-area">
+
+        <span id="adminUser">
+            Administrator
+        </span>
+
+        <span class="role-badge">
+            ADMIN
+        </span>
+
+        <button
+            class="logout-btn"
+            onclick="logout()">
+
+            Logout
+
+        </button>
+
+    </div>
+
+</header>
+
+
+<main class="main-content">
+
+
+    <div class="page-heading">
+
+        <div>
+
+            <h1>
+                ⚙ ORCA Admin Dashboard
+            </h1>
+
+            <p>
+                Monitor the complete ORCA system
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- SYSTEM KPIs -->
+    <!-- ================================================= -->
+
+    <div class="conditions-grid">
+
+
+        <div class="condition-card">
+
+            <span class="condition-icon">
+                👨‍🌾
+            </span>
+
+            <span class="condition-name">
+                Fishermen / Marine Users
+            </span>
+
+            <strong id="fishermanCount">
+                --
+            </strong>
+
+        </div>
+
+
+        <div class="condition-card">
+
+            <span class="condition-icon">
+                🚑
+            </span>
+
+            <span class="condition-name">
+                Rescue Teams
+            </span>
+
+            <strong id="rescueCount">
+                --
+            </strong>
+
+        </div>
+
+
+        <div class="condition-card">
+
+            <span class="condition-icon">
+                🚨
+            </span>
+
+            <span class="condition-name">
+                Active Emergencies
+            </span>
+
+            <strong id="emergencyCount">
+                --
+            </strong>
+
+        </div>
+
+
+        <div class="condition-card">
+
+            <span class="condition-icon">
+                🌊
+            </span>
+
+            <span class="condition-name">
+                Marine Monitoring
+            </span>
+
+            <strong>
+                ACTIVE
+            </strong>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- ================================================= -->
+    <!-- SYSTEM SECTIONS -->
+    <!-- ================================================= -->
+
+    <section class="location-card">
+
+
+        <div class="section-title">
+
+            <h2>
+                System Management
+            </h2>
+
+        </div>
+
+
+        <div class="location-grid">
+
+
+            <div class="location-item">
+
+                <span>
+                    User Management
+                </span>
+
+                <strong>
+                    Manage Users
+                </strong>
+
+            </div>
+
+
+            <div class="location-item">
+
+                <span>
+                    Rescue Teams
+                </span>
+
+                <strong>
+                    Manage Rescue Teams
+                </strong>
+
+            </div>
+
+
+            <div class="location-item">
+
+                <span>
+                    Emergency Monitoring
+                </span>
+
+                <strong>
+                    Monitor SOS
+                </strong>
+
+            </div>
+
+
+            <div class="location-item">
+
+                <span>
+                    Marine Data
+                </span>
+
+                <strong>
+                    Monitor Data Sources
+                </strong>
+
+            </div>
+
+
+            <div class="location-item">
+
+                <span>
+                    System Settings
+                </span>
+
+                <strong>
+                    Configure ORCA
+                </strong>
+
+            </div>
+
+
+            <div class="location-item">
+
+                <span>
+                    Reports
+                </span>
+
+                <strong>
+                    View Reports
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- EMERGENCY OVERVIEW -->
+    <!-- ================================================= -->
+
+    <section class="location-card">
+
+
+        <div class="section-title">
+
+            <h2>
+                🚨 Emergency Overview
+            </h2>
+
+        </div>
+
+
+        <div id="emergencyList">
+
+            Loading...
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+<script>
+
+
+// ============================================================
+// ROLE CHECK
+// ============================================================
+
+const role =
+    localStorage.getItem(
+        "orca_role"
+    );
+
+
+if (role !== "admin") {
+
+    alert(
+        "Access denied. Administrator account required."
+    );
+
+    window.location.href = "/";
+
+}
+
+
+// ============================================================
+// USER
+// ============================================================
+
+document.getElementById(
+    "adminUser"
+).textContent =
+
+    localStorage.getItem(
+        "orca_username"
+    )
+    || "Administrator";
+
+
+// ============================================================
+// LOAD EMERGENCIES
+// ============================================================
+
+async function loadEmergencyData() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/sos/active"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            return;
+
+        }
+
+
+        const alerts =
+            data.alerts || [];
+
+
+        document.getElementById(
+            "emergencyCount"
+        ).textContent =
+            alerts.length;
+
+
+        const list =
+            document.getElementById(
+                "emergencyList"
+            );
+
+
+        if (!alerts.length) {
+
+            list.innerHTML = `
+
+                <p style="
+                    color:#65d8a0;
+                    padding:20px 0;
+                ">
+
+                    🟢 No active emergencies.
+
+                </p>
+
+            `;
+
+            return;
+
+        }
+
+
+        list.innerHTML = alerts.map(
+            function(alert) {
+
+                return `
+
+                    <div class="location-item"
+                         style="margin-top:10px;">
+
+                        <span>
+                            ${alert.sos_id}
+                        </span>
+
+                        <strong>
+                            🚨
+                            ${alert.emergency_type}
+                            —
+                            ${alert.status}
+                        </strong>
+
+                    </div>
+
+                `;
+
+            }
+        ).join("");
+
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+    }
+
+}
+
+
+loadEmergencyData();
+
+
+setInterval(
+
+    loadEmergencyData,
+
+    5000
+
+);
+
+
+// ============================================================
+// LOGOUT
+// ============================================================
+
+function logout() {
+
+    localStorage.removeItem(
+        "orca_username"
+    );
+
+    localStorage.removeItem(
+        "orca_role"
+    );
+
+    window.location.href = "/";
+
+}
+
+</script>
+
+
+</body>
+
+</html>

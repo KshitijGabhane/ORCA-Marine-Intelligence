@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>ORCA Rescue Dashboard</title>
+
+
+    <!-- ============================================================
+         LEAFLET CSS
+    ============================================================ -->
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+
+    <!-- ============================================================
+         ORCA DASHBOARD CSS
+    ============================================================ -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/dashboard.css') }}"
+    >
+
+
+    <!-- ============================================================
+         RESCUE DASHBOARD STYLE
+    ============================================================ -->
+
+    <style>
+
+        .rescue-page {
+            padding: 25px;
+        }
+
+        .rescue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .rescue-header h1 {
+            margin: 0;
+        }
+
+        .rescue-header p {
+            color: #7895a3;
+        }
+
+
+        /* ========================================================
+           KPI
+        ======================================================== */
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .kpi-card {
+            background: #091f2d;
+            border: 1px solid #173d50;
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .kpi-card span {
+            color: #7996a4;
+            font-size: 13px;
+        }
+
+        .kpi-card strong {
+            display: block;
+            font-size: 30px;
+            margin-top: 8px;
+        }
+
+
+        /* ========================================================
+           MAIN LAYOUT
+        ======================================================== */
+
+        .rescue-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 20px;
+        }
+
+        .alert-panel,
+        .rescue-map-panel {
+            background: #091f2d;
+            border: 1px solid #173d50;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 18px;
+            border-bottom: 1px solid #173d50;
+        }
+
+        .panel-header h2 {
+            margin: 0;
+        }
+
+
+        /* ========================================================
+           ALERT SOUND AREA
+        ======================================================== */
+
+        .sound-controls {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sound-btn {
+            padding: 9px 14px;
+            border: 0;
+            border-radius: 8px;
+            background: #087fad;
+            color: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .sound-btn:hover {
+            opacity: 0.9;
+        }
+
+        .sound-status {
+            color: #7895a3;
+            font-size: 12px;
+        }
+
+
+        /* ========================================================
+           ALERT LIST
+        ======================================================== */
+
+        .alert-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            padding: 16px;
+            border-bottom: 1px solid #173849;
+            cursor: pointer;
+        }
+
+        .alert-item:hover {
+            background: #0d3041;
+        }
+
+        .alert-id {
+            color: #54caff;
+            font-weight: bold;
+        }
+
+        .alert-type {
+            font-size: 17px;
+            margin-top: 6px;
+        }
+
+        .alert-time {
+            color: #7895a3;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .alert-status {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 5px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            background: #6c2424;
+        }
+
+
+        /* ========================================================
+           MAP
+        ======================================================== */
+
+        #rescueMap {
+            height: 600px;
+        }
+
+
+        /* ========================================================
+           DETAILS
+        ======================================================== */
+
+        .detail-panel {
+            margin-top: 20px;
+            padding: 20px;
+            background: #091f2d;
+            border: 1px solid #173d50;
+            border-radius: 15px;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .detail-box {
+            padding: 14px;
+            background: #071a26;
+            border-radius: 10px;
+        }
+
+        .detail-box span {
+            display: block;
+            color: #7996a4;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+
+        /* ========================================================
+           ACTION BUTTONS
+        ======================================================== */
+
+        .action-btn {
+            padding: 10px 15px;
+            margin-right: 8px;
+            margin-top: 15px;
+            border: 0;
+            border-radius: 8px;
+            background: #087fad;
+            color: white;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .resolve-btn {
+            background: #198754;
+        }
+
+
+        /* ========================================================
+           NEW SOS HIGHLIGHT
+        ======================================================== */
+
+        .new-alert {
+            animation: newAlertPulse 1s ease-in-out 3;
+        }
+
+        @keyframes newAlertPulse {
+
+            0% {
+                background: #091f2d;
+            }
+
+            50% {
+                background: #472525;
+            }
+
+            100% {
+                background: #091f2d;
+            }
+
+        }
+
+
+        /* ========================================================
+           MOBILE
+        ======================================================== */
+
+        @media (max-width: 900px) {
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .rescue-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .rescue-page {
+                padding: 12px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #rescueMap {
+                height: 450px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- ================================================================
+     TOP BAR
+================================================================ -->
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <span class="brand-name">
+            ORCA
+        </span>
+
+        <span class="brand-subtitle">
+            Rescue & Emergency Operations
+        </span>
+
+    </div>
+
+
+    <div class="user-area">
+
+        <span id="rescueUser">
+            Rescue Team
+        </span>
+
+        <span class="role-badge">
+            RESCUE TEAM
+        </span>
+
+        <button
+            class="logout-btn"
+            onclick="logout()">
+
+            Logout
+
+        </button>
+
+    </div>
+
+</header>
+
+
+<!-- ================================================================
+     MAIN
+================================================================ -->
+
+<main class="rescue-page">
+
+
+    <!-- ============================================================
+         HEADER
+    ============================================================ -->
+
+    <div class="rescue-header">
+
+        <div>
+
+            <h1>
+                🚨 Rescue Operations Dashboard
+            </h1>
+
+            <p>
+                Monitor and respond to active marine emergencies
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================
+         KPI CARDS
+    ============================================================ -->
+
+    <div class="kpi-grid">
+
+        <div class="kpi-card">
+
+            <span>
+                Active Emergencies
+            </span>
+
+            <strong id="activeCount">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <span>
+                New Alerts
+            </span>
+
+            <strong id="newCount">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <span>
+                Rescue In Progress
+            </span>
+
+            <strong id="progressCount">
+                0
+            </strong>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <span>
+                Resolved
+            </span>
+
+            <strong id="resolvedCount">
+                0
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================
+         ALERTS + MAP
+    ============================================================ -->
+
+    <div class="rescue-layout">
+
+
+        <!-- ========================================================
+             ALERT PANEL
+        ======================================================== -->
+
+        <section class="alert-panel">
+
+
+            <div class="panel-header">
+
+                <h2>
+                    Active Emergency Alerts
+                </h2>
+
+
+                <!-- =================================================
+                     ALERT SOUND BUTTON
+                ================================================= -->
+
+                <div class="sound-controls">
+
+                    <button
+                        id="enableAlertSound"
+                        class="sound-btn"
+                        type="button">
+
+                        🔊 Enable Alert Sound
+
+                    </button>
+
+
+                    <span
+                        id="soundStatus"
+                        class="sound-status">
+
+                        Sound disabled
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 ALERT LIST
+            ===================================================== -->
+
+            <div
+                id="alertList"
+                class="alert-list">
+
+                <p
+                    style="
+                        padding:20px;
+                        color:#7895a3;
+                    ">
+
+                    Loading alerts...
+
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- ========================================================
+             RESCUE MAP
+        ======================================================== -->
+
+        <section class="rescue-map-panel">
+
+            <div class="panel-header">
+
+                <h2>
+                    Emergency Locations
+                </h2>
+
+            </div>
+
+            <div id="rescueMap"></div>
+
+        </section>
+
+    </div>
+
+
+    <!-- ============================================================
+         EMERGENCY DETAILS
+    ============================================================ -->
+
+    <section class="detail-panel">
+
+        <div class="panel-header">
+
+            <h2>
+                Emergency Details
+            </h2>
+
+        </div>
+
+
+        <div id="details">
+
+            <p
+                style="
+                    color:#7895a3;
+                ">
+
+                Select an emergency alert.
+
+            </p>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- ================================================================
+     LEAFLET JS
+================================================================ -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script>
+
+
+/* ================================================================
+   USER INFORMATION
+================================================================ */
+
+const username =
+    localStorage.getItem(
+        "orca_username"
+    ) || "Rescue Team";
+
+
+const role =
+    localStorage.getItem(
+        "orca_role"
+    );
+
+
+const rescueUser =
+    document.getElementById(
+        "rescueUser"
+    );
+
+
+if (rescueUser) {
+
+    rescueUser.textContent =
+        username;
+
+}
+
+
+/* ================================================================
+   FRONTEND ROLE CHECK
+================================================================ */
+
+if (role && role !== "rescue") {
+
+    alert(
+        "Access denied. Rescue Team account required."
+    );
+
+    window.location.href = "/";
+
+}
+
+
+/*
+   IMPORTANT:
+
+   The real security check is already done
+   by Flask:
+
+   /rescue-dashboard
+
+   requires session role = rescue.
+
+   This frontend check is only an additional
+   UI check.
+*/
+
+
+/* ================================================================
+   MAP
+================================================================ */
+
+const rescueMap =
+    L.map("rescueMap")
+    .setView(
+        [15.0, 78.0],
+        5
+    );
+
+
+L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        attribution:
+            "&copy; OpenStreetMap contributors"
+    }
+).addTo(rescueMap);
+
+
+/* ================================================================
+   GLOBAL SOS DATA
+================================================================ */
+
+let alerts = [];
+
+let markers = [];
+
+
+/* ================================================================
+   NEW SOS DETECTION
+================================================================ */
+
+/*
+   Stores SOS IDs already seen by this dashboard.
+
+   Example:
+
+   First refresh:
+   SOS-1234 -> new -> buzzer
+
+   Next refresh:
+   SOS-1234 -> already known -> no buzzer
+
+   New SOS:
+   SOS-5678 -> new -> buzzer
+*/
+
+let knownSosIds =
+    new Set();
+
+
+/* ================================================================
+   ALERT SOUND VARIABLES
+================================================================ */
+
+let soundEnabled =
+    false;
+
+
+let audioContext =
+    null;
+
+
+/* ================================================================
+   ENABLE ALERT SOUND
+================================================================ */
+
+async function enableAlertSound() {
+
+    try {
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+
+        if (!AudioContext) {
+
+            alert(
+                "Your browser does not support alert sound."
+            );
+
+            return;
+
+        }
+
+
+        /*
+           Create audio context only once.
+        */
+
+        if (!audioContext) {
+
+            audioContext =
+                new AudioContext();
+
+        }
+
+
+        /*
+           Browser may keep audio suspended
+           until user interacts with page.
+        */
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+
+            await audioContext.resume();
+
+        }
+
+
+        /*
+           IMPORTANT:
+
+           Enable sound BEFORE calling playTone().
+        */
+
+        soundEnabled =
+            true;
+
+
+        /*
+           Small test tone.
+
+           This confirms that the browser
+           allows audio.
+        */
+
+        playTone(
+            700,
+            0.15
+        );
+
+
+        const status =
+            document.getElementById(
+                "soundStatus"
+            );
+
+
+        if (status) {
+
+            status.textContent =
+                "🟢 Sound enabled";
+
+            status.style.color =
+                "#65d8a0";
+
+        }
+
+
+        const button =
+            document.getElementById(
+                "enableAlertSound"
+            );
+
+
+        if (button) {
+
+            button.textContent =
+                "🔊 Alert Sound Enabled";
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Audio initialization error:",
+            error
+        );
+
+        alert(
+            "Unable to enable alert sound."
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   PLAY ONE TONE
+================================================================ */
+
+function playTone(
+    frequency,
+    duration
+) {
+
+    if (
+        !audioContext ||
+        !soundEnabled
+    ) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const oscillator =
+            audioContext.createOscillator();
+
+
+        const gain =
+            audioContext.createGain();
+
+
+        oscillator.type =
+            "sine";
+
+
+        oscillator.frequency.value =
+            frequency;
+
+
+        const currentTime =
+            audioContext.currentTime;
+
+
+        gain.gain.setValueAtTime(
+            0.0001,
+            currentTime
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.25,
+            currentTime + 0.01
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            currentTime + duration
+        );
+
+
+        oscillator.connect(
+            gain
+        );
+
+
+        gain.connect(
+            audioContext.destination
+        );
+
+
+        oscillator.start(
+            currentTime
+        );
+
+
+        oscillator.stop(
+            currentTime + duration
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Tone error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   FIVE SECOND SOS BUZZER
+================================================================ */
+
+/*
+   Emergency alarm.
+
+   Pattern:
+
+   BEEP - BEEP - BEEP
+   pause
+   BEEP - BEEP - BEEP
+   pause
+   ...
+
+   Runs for approximately 5 seconds.
+
+   This function exists ONLY on the
+   Rescue Dashboard.
+*/
+
+function playSOSBuzzer() {
+
+    if (!soundEnabled) {
+
+        console.log(
+            "SOS buzzer skipped: sound is disabled."
+        );
+
+        return;
+
+    }
+
+
+    if (!audioContext) {
+
+        console.log(
+            "SOS buzzer skipped: audio context not available."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+
+            audioContext.resume();
+
+        }
+
+
+        const startTime =
+            audioContext.currentTime;
+
+
+        const duration =
+            5;
+
+
+        /*
+           Create one emergency beep.
+        */
+
+        function alarmBeep(
+            time,
+            frequency,
+            length
+        ) {
+
+            const oscillator =
+                audioContext.createOscillator();
+
+
+            const gainNode =
+                audioContext.createGain();
+
+
+            oscillator.type =
+                "square";
+
+
+            oscillator.frequency.setValueAtTime(
+                frequency,
+                time
+            );
+
+
+            gainNode.gain.setValueAtTime(
+                0.001,
+                time
+            );
+
+
+            gainNode.gain.exponentialRampToValueAtTime(
+                0.8,
+                time + 0.02
+            );
+
+
+            gainNode.gain.exponentialRampToValueAtTime(
+                0.001,
+                time + length
+            );
+
+
+            oscillator.connect(
+                gainNode
+            );
+
+
+            gainNode.connect(
+                audioContext.destination
+            );
+
+
+            oscillator.start(
+                time
+            );
+
+
+            oscillator.stop(
+                time + length
+            );
+
+        }
+
+
+        /*
+           Repeat emergency pattern
+           for 5 seconds.
+        */
+
+        let t =
+            startTime;
+
+
+        while (
+            t <
+            startTime + duration
+        ) {
+
+            /*
+               BEEP
+            */
+
+            alarmBeep(
+                t,
+                900,
+                0.18
+            );
+
+
+            /*
+               BEEP
+            */
+
+            alarmBeep(
+                t + 0.25,
+                1100,
+                0.18
+            );
+
+
+            /*
+               BEEP
+            */
+
+            alarmBeep(
+                t + 0.50,
+                900,
+                0.18
+            );
+
+
+            /*
+               Pause before
+               next emergency pattern.
+            */
+
+            t += 1.1;
+
+        }
+
+
+        console.log(
+            "🚨 SOS BUZZER PLAYING"
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "SOS buzzer error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   DETECT NEW SOS
+================================================================ */
+
+/*
+   This function is VERY IMPORTANT.
+
+   It checks every SOS returned by:
+
+   /api/sos/active
+
+   If the SOS ID has never been seen
+   before, it is treated as a NEW SOS.
+
+   Only a NEW SOS triggers the buzzer.
+*/
+
+function detectNewSOS(
+    currentAlerts
+) {
+
+    const currentIds =
+        new Set();
+
+
+    currentAlerts.forEach(
+        function(alert) {
+
+            if (!alert.sos_id) {
+
+                return;
+
+            }
+
+
+            const sosId =
+                String(
+                    alert.sos_id
+                );
+
+
+            currentIds.add(
+                sosId
+            );
+
+
+            /*
+               NEW SOS
+            */
+
+            if (
+                !knownSosIds.has(
+                    sosId
+                )
+            ) {
+
+                console.log(
+                    "🚨 NEW SOS DETECTED:",
+                    sosId
+                );
+
+
+                /*
+                   Play emergency buzzer.
+
+                   ONLY Rescue Dashboard
+                   reaches this function.
+                */
+
+                playSOSBuzzer();
+
+            }
+
+        }
+    );
+
+
+    /*
+       Store current IDs.
+
+       This prevents the same SOS from
+       triggering the buzzer every 5 seconds.
+    */
+
+    knownSosIds =
+        currentIds;
+
+}
+
+
+/* ================================================================
+   LOAD ACTIVE SOS
+================================================================ */
+
+async function loadAlerts() {
+
+    try {
+
+        console.log(
+            "Checking for active SOS..."
+        );
+
+
+        const response =
+            await fetch(
+                "/api/sos/active",
+                {
+                    cache: "no-store"
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Server returned " +
+                response.status
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        console.log(
+            "SOS API response:",
+            data
+        );
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Unable to load SOS alerts"
+            );
+
+        }
+
+
+        /*
+           Support the expected API field.
+        */
+
+        alerts =
+            data.alerts ||
+            data.sos ||
+            [];
+
+
+        /*
+           Detect new SOS before rendering.
+        */
+
+        detectNewSOS(
+            alerts
+        );
+
+
+        /*
+           Update dashboard.
+        */
+
+        renderAlerts();
+
+        renderMarkers();
+
+        updateKPIs();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Alert loading error:",
+            error
+        );
+
+
+        const list =
+            document.getElementById(
+                "alertList"
+            );
+
+
+        if (list) {
+
+            list.innerHTML = `
+
+                <p
+                    style="
+                        padding:20px;
+                        color:#ff7777;
+                    ">
+
+                    Unable to load emergency alerts.
+
+                </p>
+
+            `;
+
+        }
+
+    }
+
+}
+
+
+/* ================================================================
+   RENDER ALERT LIST
+================================================================ */
+
+function renderAlerts() {
+
+    const list =
+        document.getElementById(
+            "alertList"
+        );
+
+
+    if (!list) {
+
+        return;
+
+    }
+
+
+    /*
+       No active emergency.
+    */
+
+    if (!alerts.length) {
+
+        list.innerHTML = `
+
+            <p
+                style="
+                    padding:20px;
+                    color:#65d8a0;
+                ">
+
+                🟢 No active emergencies.
+
+            </p>
+
+        `;
+
+        return;
+
+    }
+
+
+    list.innerHTML =
+        "";
+
+
+    alerts.forEach(
+        function(alert) {
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            item.className =
+                "alert-item";
+
+
+            /*
+               Alert information.
+            */
+
+            item.innerHTML = `
+
+                <div class="alert-id">
+
+                    🚨
+
+                    ${escapeHTML(
+                        alert.sos_id ||
+                        "SOS"
+                    )}
+
+                </div>
+
+
+                <div class="alert-type">
+
+                    🚨
+
+                    ${escapeHTML(
+                        alert.emergency_type ||
+                        "Other"
+                    )}
+
+                </div>
+
+
+                <div class="alert-time">
+
+                    ${escapeHTML(
+                        alert.created_at ||
+                        ""
+                    )}
+
+                </div>
+
+
+                <div class="alert-status">
+
+                    ${escapeHTML(
+                        alert.status ||
+                        "SOS_ACTIVE"
+                    )}
+
+                </div>
+
+            `;
+
+
+            /*
+               Click alert to show details.
+            */
+
+            item.onclick =
+                function() {
+
+                    showDetails(
+                        alert
+                    );
+
+                };
+
+
+            list.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   HTML ESCAPE
+================================================================ */
+
+function escapeHTML(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+
+    div.textContent =
+        String(value);
+
+
+    return div.innerHTML;
+
+}
+
+
+/* ================================================================
+   RENDER MAP MARKERS
+================================================================ */
+
+function renderMarkers() {
+
+    /*
+       Remove previous markers.
+    */
+
+    markers.forEach(
+        function(marker) {
+
+            rescueMap.removeLayer(
+                marker
+            );
+
+        }
+    );
+
+
+    markers =
+        [];
+
+
+    /*
+       Add current SOS markers.
+    */
+
+    alerts.forEach(
+        function(alert) {
+
+            if (
+                alert.latitude === null ||
+                alert.longitude === null ||
+                alert.latitude === undefined ||
+                alert.longitude === undefined
+            ) {
+
+                return;
+
+            }
+
+
+            const latitude =
+                Number(
+                    alert.latitude
+                );
+
+
+            const longitude =
+                Number(
+                    alert.longitude
+                );
+
+
+            if (
+                !Number.isFinite(
+                    latitude
+                ) ||
+                !Number.isFinite(
+                    longitude
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            const marker =
+                L.marker([
+                    latitude,
+                    longitude
+                ])
+                .addTo(
+                    rescueMap
+                )
+                .bindPopup(`
+
+                    <strong>
+
+                        🚨
+
+                        ${escapeHTML(
+                            alert.sos_id ||
+                            "SOS"
+                        )}
+
+                    </strong>
+
+                    <br><br>
+
+                    ${escapeHTML(
+                        alert.emergency_type ||
+                        "Other"
+                    )}
+
+                    <br><br>
+
+                    Status:
+
+                    ${escapeHTML(
+                        alert.status ||
+                        "SOS_ACTIVE"
+                    )}
+
+                `);
+
+
+            marker.on(
+                "click",
+                function() {
+
+                    showDetails(
+                        alert
+                    );
+
+                }
+            );
+
+
+            markers.push(
+                marker
+            );
+
+        }
+    );
+
+}
+
+
+/* ================================================================
+   SHOW SOS DETAILS
+================================================================ */
+
+function showDetails(
+    alert
+) {
+
+    const details =
+        document.getElementById(
+            "details"
+        );
+
+
+    if (!details) {
+
+        return;
+
+    }
+
+
+    details.innerHTML = `
+
+        <div class="detail-grid">
+
+
+            <div class="detail-box">
+
+                <span>
+                    SOS ID
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        alert.sos_id ||
+                        "--"
+                    )}
+
+                </strong>
+
+            </div>
+
+
+            <div class="detail-box">
+
+                <span>
+                    User
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        alert.user_id ||
+                        "--"
+                    )}
+
+                </strong>
+
+            </div>
+
+
+            <div class="detail-box">
+
+                <span>
+                    Emergency Type
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        alert.emergency_type ||
+                        "--"
+                    )}
+
+                </strong>
+
+            </div>
+
+
+            <div class="detail-box">
+
+                <span>
+                    Latitude
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        alert.latitude ??
+                        "--"
+                    )}
+
+                </strong>
+
+            </div>
+
+
+            <div class="detail-box">
+
+                <span>
+                    Longitude
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        alert.longitude ??
+                        "--"
+                    )}
+
+                </strong>
+
+            </div>
+
+
+            <div class="detail-box">
+
+                <span>
+                    GPS Accuracy
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        alert.accuracy ??
+                        "--"
+                    )}
+
+                    m
+
+                </strong>
+
+            </div>
+
+
+            <div class="detail-box">
+
+                <span>
+                    Alert Time
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        alert.created_at ||
+                        "--"
+                    )}
+
+                </strong>
+
+            </div>
+
+
+            <div class="detail-box">
+
+                <span>
+                    Status
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        alert.status ||
+                        "--"
+                    )}
+
+                </strong>
+
+            </div>
+
+
+            <div class="detail-box">
+
+                <span>
+                    Alert Status
+                </span>
+
+                <strong>
+
+                    ${escapeHTML(
+                        alert.alert_status ||
+                        "--"
+                    )}
+
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="action-btn"
+            onclick="updateStatus(
+                '${escapeJS(
+                    alert.sos_id
+                )}',
+                'RESCUE_ACKNOWLEDGED'
+            )">
+
+            ACKNOWLEDGE
+
+        </button>
+
+
+        <button
+            class="action-btn"
+            onclick="updateStatus(
+                '${escapeJS(
+                    alert.sos_id
+                )}',
+                'RESCUE_IN_PROGRESS'
+            )">
+
+            START RESCUE
+
+        </button>
+
+
+        <button
+            class="action-btn resolve-btn"
+            onclick="updateStatus(
+                '${escapeJS(
+                    alert.sos_id
+                )}',
+                'EMERGENCY_RESOLVED'
+            )">
+
+            RESOLVE
+
+        </button>
+
+    `;
+
+
+    /*
+       Center map on SOS.
+    */
+
+    if (
+        alert.latitude !== null &&
+        alert.longitude !== null &&
+        alert.latitude !== undefined &&
+        alert.longitude !== undefined
+    ) {
+
+        const latitude =
+            Number(
+                alert.latitude
+            );
+
+
+        const longitude =
+            Number(
+                alert.longitude
+            );
+
+
+        if (
+            Number.isFinite(
+                latitude
+            ) &&
+            Number.isFinite(
+                longitude
+            )
+        ) {
+
+            rescueMap.setView(
+                [
+                    latitude,
+                    longitude
+                ],
+                11
+            );
+
+        }
+
+    }
+
+}
+
+
+/* ================================================================
+   JAVASCRIPT STRING ESCAPE
+================================================================ */
+
+function escapeJS(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+
+        .replace(
+            /\\/g,
+            "\\\\"
+        )
+
+        .replace(
+            /'/g,
+            "\\'"
+        )
+
+        .replace(
+            /"/g,
+            '\\"'
+        )
+
+        .replace(
+            /\n/g,
+            "\\n"
+        )
+
+        .replace(
+            /\r/g,
+            "\\r"
+        );
+
+}
+
+
+/* ================================================================
+   UPDATE SOS STATUS
+================================================================ */
+
+async function updateStatus(
+    sosId,
+    status
+) {
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/sos/${encodeURIComponent(
+                    sosId
+                )}/status`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            status:
+                                status
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+            alert(
+                data.message ||
+                "Unable to update SOS status."
+            );
+
+            return;
+
+        }
+
+
+        /*
+           Reload active SOS list.
+
+           If resolved/cancelled,
+           it will disappear from active list.
+        */
+
+        await loadAlerts();
+
+
+        const details =
+            document.getElementById(
+                "details"
+            );
+
+
+        if (details) {
+
+            details.innerHTML = `
+
+                <p
+                    style="
+                        color:#65d8a0;
+                    ">
+
+                    Status updated to:
+
+                    <strong>
+
+                        ${escapeHTML(
+                            status
+                        )}
+
+                    </strong>
+
+                </p>
+
+            `;
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Status update error:",
+            error
+        );
+
+
+        alert(
+            "Unable to update emergency status."
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   KPI
+================================================================ */
+
+function updateKPIs() {
+
+    const active =
+        alerts.length;
+
+
+    const progress =
+        alerts.filter(
+            function(alert) {
+
+                return (
+                    alert.status ===
+                    "RESCUE_IN_PROGRESS"
+                );
+
+            }
+        ).length;
+
+
+    const acknowledged =
+        alerts.filter(
+            function(alert) {
+
+                return (
+                    alert.status ===
+                    "RESCUE_ACKNOWLEDGED"
+                );
+
+            }
+        ).length;
+
+
+    /*
+       Active emergencies
+    */
+
+    const activeElement =
+        document.getElementById(
+            "activeCount"
+        );
+
+
+    if (activeElement) {
+
+        activeElement.textContent =
+            active;
+
+    }
+
+
+    /*
+       New alerts / acknowledged
+    */
+
+    const newElement =
+        document.getElementById(
+            "newCount"
+        );
+
+
+    if (newElement) {
+
+        newElement.textContent =
+            acknowledged;
+
+    }
+
+
+    /*
+       Rescue in progress
+    */
+
+    const progressElement =
+        document.getElementById(
+            "progressCount"
+        );
+
+
+    if (progressElement) {
+
+        progressElement.textContent =
+            progress;
+
+    }
+
+
+    /*
+       Resolved
+
+       Resolved SOS are removed from
+       /api/sos/active.
+
+       Therefore this dashboard cannot
+       calculate historical resolved total
+       from the active endpoint alone.
+    */
+
+    const resolvedElement =
+        document.getElementById(
+            "resolvedCount"
+        );
+
+
+    if (resolvedElement) {
+
+        resolvedElement.textContent =
+            "0";
+
+    }
+
+}
+
+
+/* ================================================================
+   ALERT SOUND BUTTON
+================================================================ */
+
+const soundButton =
+    document.getElementById(
+        "enableAlertSound"
+    );
+
+
+if (soundButton) {
+
+    soundButton.addEventListener(
+        "click",
+        enableAlertSound
+    );
+
+}
+
+
+/* ================================================================
+   INITIAL LOAD
+================================================================ */
+
+loadAlerts();
+
+
+/* ================================================================
+   AUTO REFRESH
+================================================================ */
+
+/*
+   Check for new SOS every 5 seconds.
+
+   IMPORTANT:
+
+   The buzzer does NOT play every 5 seconds.
+
+   It only plays when a NEW SOS ID
+   is found.
+*/
+
+setInterval(
+    loadAlerts,
+    5000
+);
+
+
+/* ================================================================
+   LOGOUT
+================================================================ */
+
+function logout() {
+
+    /*
+       Remove frontend display information.
+    */
+
+    localStorage.removeItem(
+        "orca_username"
+    );
+
+
+    localStorage.removeItem(
+        "orca_role"
+    );
+
+
+    /*
+       Flask logout clears the real
+       server-side session.
+    */
+
+    window.location.href =
+        "/logout";
+
+}
+
+</script>
+
+
+</body>
+
+</html>

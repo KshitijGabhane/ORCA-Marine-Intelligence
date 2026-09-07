@@ -1,0 +1,510 @@
+{
+  "type": "FeatureCollection",
+  "name": "orca_marine_areas_prototype",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Arabian Sea",
+        "type": "main_region",
+        "description": "Western marine region of India",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              66,
+              24
+            ],
+            [
+              77,
+              24
+            ],
+            [
+              77,
+              8
+            ],
+            [
+              66,
+              8
+            ],
+            [
+              66,
+              24
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Lakshadweep Sea",
+        "type": "main_region",
+        "description": "Marine region around Lakshadweep",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              70,
+              14
+            ],
+            [
+              78,
+              14
+            ],
+            [
+              78,
+              7
+            ],
+            [
+              70,
+              7
+            ],
+            [
+              70,
+              14
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bay of Bengal",
+        "type": "main_region",
+        "description": "Eastern marine region of India",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77,
+              23
+            ],
+            [
+              94,
+              23
+            ],
+            [
+              94,
+              8
+            ],
+            [
+              77,
+              8
+            ],
+            [
+              77,
+              23
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Andaman Sea",
+        "type": "main_region",
+        "description": "Marine region around the Andaman Islands",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              90,
+              16
+            ],
+            [
+              96,
+              16
+            ],
+            [
+              96,
+              6
+            ],
+            [
+              90,
+              6
+            ],
+            [
+              90,
+              16
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Indian Ocean",
+        "type": "main_region",
+        "description": "Southern marine region",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              66,
+              8
+            ],
+            [
+              96,
+              8
+            ],
+            [
+              96,
+              -2
+            ],
+            [
+              66,
+              -2
+            ],
+            [
+              66,
+              8
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Gulf of Kachchh",
+        "type": "sub_region",
+        "description": "Marine area near Gujarat",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              68,
+              23
+            ],
+            [
+              71.5,
+              23
+            ],
+            [
+              71.5,
+              21.5
+            ],
+            [
+              68,
+              21.5
+            ],
+            [
+              68,
+              23
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Gulf of Khambhat",
+        "type": "sub_region",
+        "description": "Marine area near Gujarat",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              71,
+              22
+            ],
+            [
+              73.5,
+              22
+            ],
+            [
+              73.5,
+              20
+            ],
+            [
+              71,
+              20
+            ],
+            [
+              71,
+              22
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Maharashtra Coastal Waters",
+        "type": "sub_region",
+        "description": "Coastal marine waters of Maharashtra",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              72,
+              20.8
+            ],
+            [
+              74.5,
+              20.8
+            ],
+            [
+              74.5,
+              15
+            ],
+            [
+              72,
+              15
+            ],
+            [
+              72,
+              20.8
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Kerala Coastal Waters",
+        "type": "sub_region",
+        "description": "Coastal marine waters of Kerala",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              74.5,
+              12
+            ],
+            [
+              77.5,
+              12
+            ],
+            [
+              77.5,
+              8
+            ],
+            [
+              74.5,
+              8
+            ],
+            [
+              74.5,
+              12
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Palk Bay",
+        "type": "sub_region",
+        "description": "Marine area near southeast India",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              78.5,
+              11
+            ],
+            [
+              80.5,
+              11
+            ],
+            [
+              80.5,
+              9
+            ],
+            [
+              78.5,
+              9
+            ],
+            [
+              78.5,
+              11
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Gulf of Mannar",
+        "type": "sub_region",
+        "description": "Marine area off southeast Tamil Nadu",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5,
+              10
+            ],
+            [
+              80.5,
+              10
+            ],
+            [
+              80.5,
+              7.5
+            ],
+            [
+              77.5,
+              7.5
+            ],
+            [
+              77.5,
+              10
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Odisha Coastal Waters",
+        "type": "sub_region",
+        "description": "Coastal marine waters of Odisha",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              85,
+              22
+            ],
+            [
+              88.5,
+              22
+            ],
+            [
+              88.5,
+              19
+            ],
+            [
+              85,
+              19
+            ],
+            [
+              85,
+              22
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Andaman Waters",
+        "type": "sub_region",
+        "description": "Marine waters around Andaman Islands",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              91,
+              14
+            ],
+            [
+              94,
+              14
+            ],
+            [
+              94,
+              10
+            ],
+            [
+              91,
+              10
+            ],
+            [
+              91,
+              14
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Nicobar Waters",
+        "type": "sub_region",
+        "description": "Marine waters around Nicobar Islands",
+        "source": "ORCA Prototype Dataset"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              92,
+              10
+            ],
+            [
+              95,
+              10
+            ],
+            [
+              95,
+              5
+            ],
+            [
+              92,
+              5
+            ],
+            [
+              92,
+              10
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>ORCA - Fisheries Intelligence</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/dashboard.css') }}">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #071923;
+            color: white;
+        }
+
+        .fisheries-page {
+            padding: 30px;
+        }
+
+        .page-header {
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        .page-header p {
+            color: #9bb6c4;
+            margin-top: 8px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 18px;
+            background: #147fb5;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .location-card {
+            background: #102f3d;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .location-card h2 {
+            margin-top: 0;
+        }
+
+        .location-row {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .location-item {
+            color: #b8ced8;
+        }
+
+        .location-item strong {
+            display: block;
+            color: white;
+            margin-top: 5px;
+        }
+
+        .pfz-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(200px, 1fr)
+            );
+
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .pfz-card {
+            background: #102f3d;
+            padding: 22px;
+            border-radius: 12px;
+            border-left: 4px solid #2399bd;
+        }
+
+        .pfz-card h3 {
+            margin: 0 0 10px 0;
+            color: #9bb6c4;
+            font-size: 15px;
+        }
+
+        .pfz-value {
+            font-size: 23px;
+            font-weight: bold;
+        }
+
+        .risk-low {
+            color: #36d27b;
+        }
+
+        .risk-medium {
+            color: #ffd166;
+        }
+
+        .risk-high {
+            color: #ff5252;
+        }
+
+        #fisheriesMap {
+            height: 450px;
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .status {
+            padding: 15px;
+            background: #102f3d;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            color: #9bb6c4;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="fisheries-page">
+
+    <a href="/index" class="back-btn">
+        ← Back to Marine Dashboard
+    </a>
+
+
+    <!-- HEADER -->
+
+    <div class="page-header">
+
+        <h1>
+            🎣 Fisheries Intelligence
+        </h1>
+
+        <p>
+            Live Potential Fishing Zone information
+            from the ORCA Fisheries Agent.
+        </p>
+
+    </div>
+
+
+    <!-- STATUS -->
+
+    <div id="status"
+         class="status">
+
+        📍 Getting your location...
+
+    </div>
+
+
+    <!-- LOCATION -->
+
+    <div class="location-card">
+
+        <h2>
+            📍 Current Marine Location
+        </h2>
+
+        <div class="location-row">
+
+            <div class="location-item">
+                Latitude
+                <strong id="latitude">
+                    -
+                </strong>
+            </div>
+
+            <div class="location-item">
+                Longitude
+                <strong id="longitude">
+                    -
+                </strong>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- PFZ CARDS -->
+
+    <div class="pfz-grid">
+
+
+        <div class="pfz-card">
+
+            <h3>
+                PFZ Zone
+            </h3>
+
+            <div class="pfz-value"
+                 id="pfzZone">
+
+                -
+
+            </div>
+
+        </div>
+
+
+        <div class="pfz-card">
+
+            <h3>
+                Coast
+            </h3>
+
+            <div class="pfz-value"
+                 id="pfzCoast">
+
+                -
+
+            </div>
+
+        </div>
+
+
+        <div class="pfz-card">
+
+            <h3>
+                Distance
+            </h3>
+
+            <div class="pfz-value"
+                 id="pfzDistance">
+
+                -
+
+            </div>
+
+        </div>
+
+
+        <div class="pfz-card">
+
+            <h3>
+                Direction
+            </h3>
+
+            <div class="pfz-value"
+                 id="pfzDirection">
+
+                -
+
+            </div>
+
+        </div>
+
+
+        <div class="pfz-card">
+
+            <h3>
+                Bearing
+            </h3>
+
+            <div class="pfz-value"
+                 id="pfzBearing">
+
+                -
+
+            </div>
+
+        </div>
+
+
+        <div class="pfz-card">
+
+            <h3>
+                Depth
+            </h3>
+
+            <div class="pfz-value"
+                 id="pfzDepth">
+
+                -
+
+            </div>
+
+        </div>
+
+
+        <div class="pfz-card">
+
+            <h3>
+                PFZ Risk
+            </h3>
+
+            <div class="pfz-value"
+                 id="pfzRisk">
+
+                -
+
+            </div>
+
+        </div>
+
+
+        <div class="pfz-card">
+
+            <h3>
+                Data Source
+            </h3>
+
+            <div class="pfz-value"
+                 id="pfzSource">
+
+                -
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- MAP -->
+
+    <div class="location-card">
+
+        <h2>
+            🗺 PFZ Location
+        </h2>
+
+        <div id="fisheriesMap"></div>
+
+    </div>
+
+
+</div>
+
+
+<!-- Leaflet -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
+<script src="{{ url_for(
+    'static',
+    filename='js/fisheries.js'
+) }}">
+</script>
+
+
+</body>
+
+</html>

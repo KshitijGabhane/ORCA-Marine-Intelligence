@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+```
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+    ORCA - Fisherman Dashboard
+</title>
+
+
+
+<!-- Leaflet -->
+
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+>
+
+
+
+<!-- Dashboard CSS -->
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/dashboard.css'
+    ) }}"
+>
+```
+
+</head>
+
+<body>
+
+<div id="offline-status">
+    Checking network...
+</div>
+
+<div id="offline-data-info"></div>
+
+<!-- ========================================================
+     TOP BAR
+========================================================= -->
+
+<header class="topbar">
+
+```
+<button
+    id="menuButton"
+    class="menu-button"
+>
+    ☰
+</button>
+
+
+
+<div class="logo">
+
+    <strong>
+        🐋 ORCA
+    </strong>
+
+    <small data-i18n="marine_intelligence_safety">
+        Marine Intelligence & Safety System
+    </small>
+
+</div>
+
+
+
+<div class="top-right">
+
+    <span
+        id="systemStatus"
+        class="online"
+    >
+        ● <span data-i18n="system_online">System Online</span>
+    </span>
+
+    <span id="topCoordinates">
+        GPS Waiting
+    </span>
+
+    <button id="logoutButton" data-i18n="logout">
+        Logout
+    </button>
+
+</div>
+```
+
+</header>
+
+<!-- ========================================================
+     SIDEBAR
+========================================================= -->
+
+<aside id="sidebar">
+
+```
+<nav>
+
+    <button
+        class="nav-item active"
+        data-section="mapSection"
+    >
+        🗺️
+        <span data-i18n="marine_map">Marine Map</span>
+    </button>
+
+
+
+    <button
+        class="nav-item"
+        data-section="weatherSection"
+    >
+        ☁️
+        <span data-i18n="weather">Weather</span>
+    </button>
+
+
+
+    <button
+        class="nav-item"
+        data-section="oceanSection"
+    >
+        🌊
+        <span data-i18n="ocean">Ocean</span>
+    </button>
+
+
+
+    <button
+        class="nav-item"
+        data-section="fisheriesSection"
+    >
+        🎣
+        <span data-i18n="fisheries">Fisheries (PFZ)</span>
+    </button>
+
+
+
+    <button
+        class="nav-item"
+        data-section="vesselSection"
+    >
+        🚢
+        <span data-i18n="vessels">Vessels</span>
+    </button>
+
+
+
+    <button
+        class="nav-item"
+        data-section="gisSection"
+    >
+        📍
+        <span data-i18n="gis_location">GIS & Location</span>
+    </button>
+
+
+
+    <button
+        id="sosButton"
+        class="nav-item sos"
+        type="button"
+    >
+        🚨
+        <span data-i18n="sos">SOS</span>
+    </button>
+
+
+    <!-- ====================================================
+         ASK ORCA - NEW NAVIGATION OPTION
+    ===================================================== -->
+
+    <button
+        id="askOrcaNavButton"
+        class="nav-item"
+        type="button"
+        onclick="window.location.href='/ask-orca'"
+    >
+        🐋
+        <span data-i18n="ask_orca">Ask ORCA</span>
+    </button>
+
+</nav>
+
+
+
+<div class="sidebar-location">
+
+    <small data-i18n="your_location">
+        YOUR LOCATION
+    </small>
+
+    <strong id="sidebarCoordinates">
+        GPS Waiting
+    </strong>
+
+    <span id="gpsStatus">
+        ● GPS Waiting
+    </span>
+
+</div>
+```
+
+</aside>
+
+<!-- ========================================================
+     MAIN
+========================================================= -->
+
+<main>
+
+<!-- ========================================================
+     PAGE HEADER
+========================================================= -->
+
+<section class="page-header">
+
+```
+<div>
+
+    <h1 data-i18n="fisherman_dashboard">
+        Fisherman Dashboard
+    </h1>
+
+    <p data-i18n="live_marine_intelligence">
+        Live marine intelligence for safer fishing
+    </p>
+
+</div>
+
+
+
+<span id="locationStatus" data-i18n="waiting_for_gps">
+    Waiting for GPS...
+</span>
+```
+
+</section>
+
+<!-- ========================================================
+     SOS EMERGENCY PANEL
+========================================================= -->
+
+<section
+    id="sosPanel"
+    class="card sos-panel"
+>
+
+```
+<div class="card-header">
+
+    <div>
+
+        <h2 data-i18n="emergency_sos">
+            🚨 Emergency SOS
+        </h2>
+
+        <p data-i18n="send_gps_location">
+            Send your current GPS location to the rescue team
+        </p>
+
+    </div>
+
+    <span id="sosStatus" data-i18n="no_active_sos">
+        No active SOS
+    </span>
+
+</div>
+
+
+
+<!-- EMERGENCY TYPE -->
+
+<div class="information-grid">
+
+    <div class="info-box">
+
+        <small data-i18n="emergency_type">
+            Emergency Type
+        </small>
+
+        <select
+            id="emergencyType"
+            class="sos-select"
+        >
+
+            <option
+                value="Medical Emergency"
+                data-i18n="medical_emergency"
+            >
+                Medical Emergency
+            </option>
+
+            <option
+                value="Boat Damage"
+                data-i18n="boat_damage"
+            >
+                Boat Damage
+            </option>
+
+            <option
+                value="Engine Failure"
+                data-i18n="engine_failure"
+            >
+                Engine Failure
+            </option>
+
+            <option
+                value="Man Overboard"
+                data-i18n="man_overboard"
+            >
+                Man Overboard
+            </option>
+
+            <option
+                value="Severe Weather"
+                data-i18n="severe_weather"
+            >
+                Severe Weather
+            </option>
+
+            <option
+                value="Other"
+                selected
+                data-i18n="other"
+            >
+                Other
+            </option>
+
+        </select>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="sos_id">
+            SOS ID
+        </small>
+
+        <strong id="sosId">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="sos_latitude">
+            SOS Latitude
+        </small>
+
+        <strong id="sosLatitude">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="sos_longitude">
+            SOS Longitude
+        </small>
+
+        <strong id="sosLongitude">
+            --
+        </strong>
+
+    </div>
+
+</div>
+
+
+
+<div class="sos-actions">
+
+    <button
+        id="sendSosButton"
+        class="sos-main-button"
+        type="button"
+        data-i18n="send_sos"
+    >
+        🚨 SEND SOS
+    </button>
+
+
+
+    <button
+        id="cancelSosButton"
+        class="sos-cancel-button"
+        type="button"
+        style="display:none;"
+        data-i18n="cancel_sos"
+    >
+        ❌ CANCEL SOS
+    </button>
+
+</div>
+
+
+
+<div
+    id="sosMessage"
+    class="sos-message"
+    data-i18n="sos_ready"
+>
+    SOS is ready. Make sure GPS is enabled before sending.
+</div>
+```
+
+</section>
+
+<!-- =====================================================
+     MARINE SAFETY
+===================================================== -->
+
+<section class="card marine-safety-card">
+
+```
+<div class="card-header">
+
+    <h2 data-i18n="marine_safety">🚨 Marine Safety</h2>
+
+    <span id="safetyLastUpdated">
+        Waiting...
+    </span>
+
+</div>
+
+
+
+<!-- OVERALL RISK -->
+
+<div class="overall-risk">
+
+    <div id="overallRiskIcon">
+        🟢
+    </div>
+
+    <div>
+
+        <small data-i18n="overall_marine_risk">
+            Overall Marine Risk
+        </small>
+
+        <h2 id="overallRisk">
+            Checking...
+        </h2>
+
+    </div>
+
+</div>
+
+
+
+<!-- HAZARDS -->
+
+<div class="hazard-grid">
+
+    <div class="hazard-item">
+
+        <span>🌪️</span>
+
+        <div>
+
+            <small data-i18n="cyclone">Cyclone</small>
+
+            <strong id="cycloneStatus">
+                Checking...
+            </strong>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="hazard-item">
+
+        <span>⚡</span>
+
+        <div>
+
+            <small data-i18n="lightning">Lightning</small>
+
+            <strong id="lightningStatus">
+                Checking...
+            </strong>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="hazard-item">
+
+        <span>🌊</span>
+
+        <div>
+
+            <small data-i18n="waves">Waves</small>
+
+            <strong id="waveStatus">
+                Checking...
+            </strong>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="hazard-item">
+
+        <span>💨</span>
+
+        <div>
+
+            <small data-i18n="wind">Wind</small>
+
+            <strong id="windStatus">
+                Checking...
+            </strong>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- GEOFENCE -->
+
+<div class="geofence-section">
+
+    <h3 data-i18n="geofence_status">🛑 Geofence Status</h3>
+
+
+
+    <div class="geofence-row">
+
+        <span data-i18n="maritime_boundary">
+            🌍 Maritime Boundary
+        </span>
+
+        <strong id="boundaryStatus">
+            Checking...
+        </strong>
+
+    </div>
+
+
+
+    <div class="geofence-row">
+
+        <span data-i18n="protected_area">
+            🐟 Protected Area
+        </span>
+
+        <strong id="protectedStatus">
+            Checking...
+        </strong>
+
+    </div>
+
+
+
+    <div class="geofence-row">
+
+        <span data-i18n="restricted_area">
+            🚫 Restricted Area
+        </span>
+
+        <strong id="restrictedStatus">
+            Checking...
+        </strong>
+
+    </div>
+
+</div>
+
+
+
+<!-- RECOMMENDATION -->
+
+<div class="safety-recommendation">
+
+    <strong data-i18n="recommendation">
+        Recommendation
+    </strong>
+
+    <p
+        id="safetyRecommendation"
+        data-i18n="checking_marine_conditions"
+    >
+        Checking marine conditions...
+    </p>
+
+</div>
+```
+
+</section>
+
+<!-- ========================================================
+     MAP
+========================================================= -->
+
+<section
+    id="mapSection"
+    class="card map-card"
+>
+
+```
+<div class="card-header">
+
+    <div>
+
+        <h2 data-i18n="ocean_map">
+            Ocean Map
+        </h2>
+
+        <p data-i18n="map_description">
+            Click anywhere to get live marine conditions
+        </p>
+
+    </div>
+
+
+
+    <div class="map-buttons">
+
+        <button
+            id="locateButton"
+            data-i18n="my_location"
+        >
+            📍 My Location
+        </button>
+
+
+
+        <button id="fullscreenButton">
+            ⛶
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<div id="map"></div>
+
+
+
+<div class="map-info">
+
+    <span data-i18n="current_location">
+        📍 Current Location
+    </span>
+
+    <span data-i18n="fishing_regions">
+        🎣 Fishing Regions
+    </span>
+
+    <span data-i18n="vessels">
+        🚢 Vessels
+    </span>
+
+    <span>
+        🛰 Satellite / 🗺
+        <span data-i18n="normal_map">Normal</span>
+    </span>
+
+</div>
+```
+
+</section>
+
+<!-- ========================================================
+     SELECTED LOCATION
+========================================================= -->
+
+<section class="card">
+
+```
+<div class="card-header">
+
+    <div>
+
+        <h2 data-i18n="selected_location">
+            📍 Selected Location
+        </h2>
+
+        <p data-i18n="selected_location_description">
+            Information for the point selected on the map
+        </p>
+
+    </div>
+
+</div>
+
+
+
+<div class="information-grid">
+
+    <div class="info-box">
+
+        <small data-i18n="latitude">
+            Latitude
+        </small>
+
+        <strong id="selectedLatitude">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="longitude">
+            Longitude
+        </small>
+
+        <strong id="selectedLongitude">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="location">
+            Location
+        </small>
+
+        <strong id="selectedLocation">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="marine_area">
+            Marine Area
+        </small>
+
+        <strong id="selectedMarineArea">
+            --
+        </strong>
+
+    </div>
+
+</div>
+```
+
+</section>
+
+<!-- ========================================================
+     WEATHER
+========================================================= -->
+
+<section
+    id="weatherSection"
+    class="card"
+>
+
+```
+<div class="card-header">
+
+    <div>
+
+        <h2 data-i18n="weather_agent">
+            ☁️ Weather Agent
+        </h2>
+
+        <p data-i18n="live_weather">
+            Live weather for selected coordinates
+        </p>
+
+    </div>
+
+    <span id="weatherSource">
+        --
+    </span>
+
+</div>
+
+
+
+<div class="information-grid four">
+
+    <div class="info-box">
+
+        <small data-i18n="temperature">
+            Temperature
+        </small>
+
+        <strong id="temperature">
+            --
+        </strong>
+
+        <span id="temperatureStatus">
+            --
+        </span>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="wind_speed">
+            Wind Speed
+        </small>
+
+        <strong id="wind">
+            --
+        </strong>
+
+        <span id="windStatus">
+            --
+        </span>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="weather_condition">
+            Weather
+        </small>
+
+        <strong id="weatherCondition">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="weather_risk">
+            Weather Risk
+        </small>
+
+        <strong id="weatherRisk">
+            --
+        </strong>
+
+    </div>
+
+</div>
+```
+
+</section>
+
+<!-- ========================================================
+     OCEAN
+========================================================= -->
+
+<section
+    id="oceanSection"
+    class="card"
+>
+
+```
+<div class="card-header">
+
+    <div>
+
+        <h2 data-i18n="ocean_agent">
+            🌊 Ocean Agent
+        </h2>
+
+        <p data-i18n="live_ocean_conditions">
+            Live ocean conditions for selected coordinates
+        </p>
+
+    </div>
+
+    <span id="oceanSource">
+        --
+    </span>
+
+</div>
+
+
+
+<div class="information-grid four">
+
+    <div class="info-box">
+
+        <small data-i18n="wave_height">
+            Wave Height
+        </small>
+
+        <strong id="waveHeight">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="sea_state">
+            Sea State
+        </small>
+
+        <strong id="seaState">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="swell">
+            Swell
+        </small>
+
+        <strong id="swell">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="ocean_risk">
+            Ocean Risk
+        </small>
+
+        <strong id="oceanRisk">
+            --
+        </strong>
+
+    </div>
+
+</div>
+```
+
+</section>
+
+<!-- ========================================================
+     FISHERIES
+========================================================= -->
+
+<section
+    id="fisheriesSection"
+    class="card"
+>
+
+```
+<div class="card-header">
+
+    <div>
+
+        <h2 data-i18n="fisheries_intelligence">
+            🎣 Fisheries Intelligence
+        </h2>
+
+        <p data-i18n="pfz_description">
+            INCOIS PFZ fishing regions
+        </p>
+
+    </div>
+
+    <strong id="pfzCount">
+        0 Regions
+    </strong>
+
+</div>
+
+
+
+<div class="information-grid four">
+
+    <div class="info-box">
+
+        <small data-i18n="selected_pfz">
+            Selected PFZ
+        </small>
+
+        <strong
+            id="selectedPFZ"
+            data-i18n="click_pfz"
+        >
+            Click a PFZ
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="distance">
+            Distance
+        </small>
+
+        <strong id="pfzDistance">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="direction">
+            Direction
+        </small>
+
+        <strong id="pfzDirection">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="depth">
+            Depth
+        </small>
+
+        <strong id="pfzDepth">
+            --
+        </strong>
+
+    </div>
+
+</div>
+
+
+
+<div
+    id="pfzDetails"
+    class="pfz-details"
+    data-i18n="click_fishing_region"
+>
+    Click a fishing region on the map.
+</div>
+```
+
+</section>
+
+<!-- ========================================================
+     VESSEL
+========================================================= -->
+
+<section
+    id="vesselSection"
+    class="card"
+>
+
+```
+<div class="card-header">
+
+    <div>
+
+        <h2 data-i18n="vessel_agent">
+            🚢 Vessel Agent
+        </h2>
+
+        <p data-i18n="nearby_ais_vessels">
+            Nearby AIS vessels
+        </p>
+
+    </div>
+
+    <button
+        id="refreshVessels"
+        data-i18n="refresh"
+    >
+        ↻ Refresh
+    </button>
+
+</div>
+
+
+
+<div class="information-grid four">
+
+    <div class="info-box">
+
+        <small data-i18n="vessels_nearby">
+            Vessels Nearby
+        </small>
+
+        <strong id="vesselCount">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="traffic">
+            Traffic
+        </small>
+
+        <strong id="trafficDensity">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="closest_vessel">
+            Closest Vessel
+        </small>
+
+        <strong id="closestVessel">
+            --
+        </strong>
+
+    </div>
+
+
+
+    <div class="info-box">
+
+        <small data-i18n="vessel_risk">
+            Vessel Risk
+        </small>
+
+        <strong id="vesselRisk">
+            --
+        </strong>
+
+    </div>
+
+</div>
+```
+
+</section>
+
+<!-- ========================================================
+     GIS
+========================================================= -->
+
+<section
+    id="gisSection"
+    class="card"
+>
+
+```
+<div class="card-header">
+
+    <div>
+
+        <h2 data-i18n="gis_location_agent">
+            📍 GIS & Location Agent
+        </h2>
+
+        <p data-i18n="marine_region_information">
+            Marine region information
+        </p>
+
+    </div>
+
+</div>
+
+
+
+<div
+    id="gisInformation"
+    class="pfz-details"
+    data-i18n="waiting_gis"
+>
+    Waiting for GIS Agent...
+</div>
+```
+
+</section>
+
+<!-- ========================================================
+     SAFETY
+========================================================= -->
+
+<section class="card">
+
+```
+<div class="card-header">
+
+    <div>
+
+        <h2 data-i18n="marine_safety">
+            🛡️ Marine Safety
+        </h2>
+
+        <p data-i18n="current_agent_status">
+            Current agent status
+        </p>
+
+    </div>
+
+</div>
+
+
+
+<div
+    id="safetyMessage"
+    class="safety-message"
+    data-i18n="waiting_live_data"
+>
+    Waiting for live data...
+</div>
+```
+
+</section>
+
+<footer>
+
+```
+<span data-i18n="orca_version">
+    ORCA v1.0
+</span>
+
+<span data-i18n="marine_intelligence_safety">
+    Marine Intelligence & Safety System
+</span>
+```
+
+</footer>
+
+</main>
+
+<!-- ========================================================
+     FLOATING ASK ORCA WHALE BUTTON - NEW
+========================================================= -->
+
+<div
+    id="askOrcaWhale"
+    class="ask-orca-whale"
+    onclick="window.location.href='http://localhost:8000/'"
+    title="Ask ORCA"
+    aria-label="Ask ORCA"
+>
+
+```
+<div class="whale-sphere">
+    🐋
+</div>
+
+<span data-i18n="ask_orca">
+    Ask ORCA
+</span>
+```
+
+</div>
+
+<div
+    id="mobileBackdrop"
+    class="mobile-backdrop"
+></div>
+
+<!-- Leaflet -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+></script>
+
+<!-- Dashboard -->
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/dashboard.js'
+    ) }}"
+></script>
+
+<script src="{{ url_for('static', filename='js/offline_safety.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/language.js') }}"></script>
+
+</body>
+
+</html>

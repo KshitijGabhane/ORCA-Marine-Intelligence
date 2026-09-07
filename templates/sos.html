@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>ORCA - Marine Safety System</title>
+
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <!-- Your CSS -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/sos.css') }}">
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="brand-icon">
+            🐋
+        </div>
+
+        <div>
+
+            <h1>ORCA</h1>
+
+            <p>Marine Intelligence & Safety System</p>
+
+        </div>
+
+    </div>
+
+
+    <div class="connection-status">
+
+        <span id="networkDot"
+              class="status-dot online">
+        </span>
+
+        <span id="networkText">
+            Online
+        </span>
+
+    </div>
+
+</header>
+
+
+
+<!-- =====================================================
+     NAVIGATION
+===================================================== -->
+
+<nav class="navigation">
+
+    <button
+        id="fishermanTab"
+        class="nav-btn active">
+
+        Fisherman
+
+    </button>
+
+
+    <button
+        id="rescuerTab"
+        class="nav-btn">
+
+        Rescue Dashboard
+
+    </button>
+
+</nav>
+
+
+
+<!-- =====================================================
+     FISHERMAN VIEW
+===================================================== -->
+
+<main id="fishermanView"
+      class="view">
+
+
+    <!-- HERO -->
+
+    <section class="hero">
+
+        <h2>
+            Emergency assistance
+        </h2>
+
+        <p>
+            Send your location to the rescue system
+            when you need immediate help.
+        </p>
+
+    </section>
+
+
+
+    <!-- =================================================
+         SOS SECTION
+    ================================================== -->
+
+    <section class="sos-section">
+
+
+        <div id="sosRing"
+             class="sos-ring">
+
+
+            <button
+                id="sosButton"
+                class="sos-button">
+
+                <span id="sosText">
+                    SOS
+                </span>
+
+                <small id="sosSubText">
+                    Press for emergency
+                </small>
+
+            </button>
+
+
+        </div>
+
+
+        <p id="sosMessage"
+           class="sos-message">
+
+            Press SOS once and confirm.
+
+        </p>
+
+
+        <!-- Cancel -->
+
+        <button
+            id="cancelButton"
+            class="cancel-btn">
+
+            Cancel SOS
+
+        </button>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         EMERGENCY TYPE
+    ================================================== -->
+
+    <section class="card emergency-card">
+
+        <div class="card-header">
+
+            <h3>
+                Emergency type
+            </h3>
+
+            <p>
+                Select the emergency if possible.
+                SOS will not be delayed by this selection.
+            </p>
+
+        </div>
+
+
+        <select id="emergencyType"
+                class="emergency-select">
+
+            <option value="Other">
+                Other
+            </option>
+
+            <option value="Medical Emergency">
+                Medical Emergency
+            </option>
+
+            <option value="Boat Problem">
+                Boat Problem
+            </option>
+
+            <option value="Engine Failure">
+                Engine Failure
+            </option>
+
+            <option value="Bad Weather">
+                Bad Weather
+            </option>
+
+            <option value="Man Overboard">
+                Man Overboard
+            </option>
+
+        </select>
+
+    </section>
+
+
+
+    <!-- =================================================
+         CONNECTION BANNER
+    ================================================== -->
+
+    <section id="offlineBanner"
+             class="offline-banner">
+
+        <div>
+
+            <strong>
+                Internet connection unavailable
+            </strong>
+
+            <p>
+                Try the available phone/SMS fallback options.
+            </p>
+
+        </div>
+
+
+        <div class="fallback-buttons">
+
+            <button
+                id="smsButton"
+                class="fallback-btn">
+
+                Send SMS
+
+            </button>
+
+
+            <button
+                id="callButton"
+                class="fallback-btn">
+
+                Call Rescue
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         LOCATION CARD
+    ================================================== -->
+
+    <section class="card">
+
+
+        <div class="card-header">
+
+            <h3>
+                Your Location
+            </h3>
+
+            <p>
+                GPS coordinates used for emergency alerts.
+            </p>
+
+        </div>
+
+
+
+        <!-- Location permission -->
+
+        <div id="locationWarning"
+             class="location-warning hidden">
+
+            <strong>
+                Location unavailable
+            </strong>
+
+            <p>
+                Please allow location access in your browser.
+            </p>
+
+        </div>
+
+
+
+        <button
+            id="locationButton"
+            class="primary-btn">
+
+            Enable Location
+
+        </button>
+
+
+
+        <!-- Coordinates -->
+
+        <div class="coordinates">
+
+
+            <div class="coordinate-box">
+
+                <span>
+                    Latitude
+                </span>
+
+                <strong id="latitude">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="coordinate-box">
+
+                <span>
+                    Longitude
+                </span>
+
+                <strong id="longitude">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="coordinate-box">
+
+                <span>
+                    Accuracy
+                </span>
+
+                <strong id="accuracy">
+                    —
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- Map -->
+
+        <div id="fishermanMap"
+             class="map">
+        </div>
+
+
+
+        <!-- Map status -->
+
+        <p id="locationStatus"
+           class="location-status">
+
+            Waiting for GPS location...
+
+        </p>
+
+
+
+        <button
+            id="shareLocationButton"
+            class="secondary-btn">
+
+            Share My Location
+
+        </button>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         CURRENT SOS INFORMATION
+    ================================================== -->
+
+    <section id="sosInfoCard"
+             class="card sos-info-card hidden">
+
+
+        <div class="card-header">
+
+            <h3>
+                Emergency Information
+            </h3>
+
+        </div>
+
+
+        <div class="info-row">
+
+            <span>
+                SOS ID
+            </span>
+
+            <strong id="currentSosId">
+                —
+            </strong>
+
+        </div>
+
+
+        <div class="info-row">
+
+            <span>
+                Status
+            </span>
+
+            <strong id="currentSosStatus">
+                —
+            </strong>
+
+        </div>
+
+
+        <div class="info-row">
+
+            <span>
+                Emergency
+            </span>
+
+            <strong id="currentEmergency">
+                —
+            </strong>
+
+        </div>
+
+
+        <div class="info-row">
+
+            <span>
+                Last location update
+            </span>
+
+            <strong id="currentLocationTime">
+                —
+            </strong>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         SAFETY INFORMATION
+    ================================================== -->
+
+    <section class="card">
+
+        <div class="card-header">
+
+            <h3>
+                Emergency fallback
+            </h3>
+
+            <p>
+                These options can help when internet connectivity
+                is weak or unavailable.
+            </p>
+
+        </div>
+
+
+        <div class="info-grid">
+
+
+            <div class="info-card">
+
+                <div class="info-icon">
+                    📱
+                </div>
+
+                <h4>
+                    SMS
+                </h4>
+
+                <p>
+                    Opens your phone's SMS application
+                    with your location.
+                </p>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-icon">
+                    📞
+                </div>
+
+                <h4>
+                    Phone
+                </h4>
+
+                <p>
+                    Opens the phone dialer for emergency calling.
+                </p>
+
+            </div>
+
+
+            <div class="info-card">
+
+                <div class="info-icon">
+                    📍
+                </div>
+
+                <h4>
+                    GPS
+                </h4>
+
+                <p>
+                    Continuously tracks your location during
+                    an active SOS.
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <footer>
+
+        ORCA — Marine Intelligence & Safety System
+
+        <br>
+
+        Team AIVENGERS
+
+    </footer>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     RESCUER VIEW
+===================================================== -->
+
+<main id="rescuerView"
+      class="view hidden">
+
+
+    <!-- KPI -->
+
+    <section class="dashboard-kpis">
+
+
+        <div class="kpi-card">
+
+            <strong id="activeCount">
+                0
+            </strong>
+
+            <span>
+                Active SOS
+            </span>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <strong id="acknowledgedCount">
+                0
+            </strong>
+
+            <span>
+                Acknowledged
+            </span>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <strong id="totalCount">
+                0
+            </strong>
+
+            <span>
+                Total Alerts
+            </span>
+
+        </div>
+
+
+        <div class="kpi-card">
+
+            <strong id="resolvedCount">
+                0
+            </strong>
+
+            <span>
+                Resolved
+            </span>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- Dashboard -->
+
+    <section class="dashboard-grid">
+
+
+        <!-- Map -->
+
+        <div class="dashboard-map-card">
+
+            <div class="dashboard-title">
+
+                <h2>
+                    Emergency Map
+                </h2>
+
+                <span>
+                    Live SOS locations
+                </span>
+
+            </div>
+
+
+            <div id="rescueMap"
+                 class="rescue-map">
+            </div>
+
+        </div>
+
+
+
+        <!-- Right panel -->
+
+        <div class="dashboard-right">
+
+
+            <!-- Incident list -->
+
+            <div class="card">
+
+                <div class="card-header">
+
+                    <h3>
+                        Emergency Alerts
+                    </h3>
+
+                    <p>
+                        Alerts received from fishermen.
+                    </p>
+
+                </div>
+
+
+                <div id="incidentList"
+                     class="incident-list">
+
+                    <div class="empty-message">
+
+                        No emergency alerts.
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Detail -->
+
+            <div id="incidentDetails"
+                 class="card">
+
+                <div class="empty-message">
+
+                    Select an emergency alert
+                    to view details.
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+    </section>
+
+
+    <footer>
+
+        ORCA Rescue Control Center
+
+    </footer>
+
+
+</main>
+
+
+
+<!-- =====================================================
+     ORCA ASSISTANT
+===================================================== -->
+
+<button
+    id="assistantButton"
+    class="assistant-button">
+
+    🐋
+
+</button>
+
+
+<div id="assistantPanel"
+     class="assistant-panel hidden">
+
+
+    <div class="assistant-header">
+
+        <strong>
+            ORCA Assistant
+        </strong>
+
+
+        <button
+            id="assistantClose">
+
+            ✕
+
+        </button>
+
+    </div>
+
+
+    <div class="assistant-body">
+
+        <p>
+            For an emergency, use the SOS button.
+        </p>
+
+        <p>
+            Your GPS location will be sent to the
+            rescue backend when available.
+        </p>
+
+    </div>
+
+</div>
+
+
+
+<!-- Leaflet JS -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+<!-- Your JS -->
+
+<script src="{{ url_for('static', filename='js/sos.js') }}"></script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,1391 @@
+/* =========================================================
+   ORCA SOS SYSTEM
+   CSS
+========================================================= */
+
+
+:root {
+
+    --bg: #071926;
+
+    --bg-dark: #04111b;
+
+    --panel: #0d2738;
+
+    --panel-light: #12364a;
+
+    --border: rgba(255,255,255,0.10);
+
+    --text: #eaf4f4;
+
+    --muted: #8fa7b3;
+
+    --teal: #35c4c9;
+
+    --teal-dark: #208e93;
+
+    --red: #ff4c3b;
+
+    --red-dark: #c62828;
+
+    --orange: #ffb238;
+
+    --green: #4ade80;
+
+    --radius: 18px;
+
+}
+
+
+* {
+
+    box-sizing: border-box;
+
+}
+
+
+body {
+
+    margin: 0;
+
+    min-height: 100vh;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    color: var(--text);
+
+    background:
+        radial-gradient(
+            circle at top,
+            #123b52,
+            var(--bg-dark)
+        );
+
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.topbar {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 16px 25px;
+
+    border-bottom:
+        1px solid var(--border);
+
+    background:
+        rgba(5,20,30,0.92);
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 1000;
+
+}
+
+
+.brand {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+}
+
+
+.brand-icon {
+
+    font-size: 30px;
+
+}
+
+
+.brand h1 {
+
+    margin: 0;
+
+    font-size: 22px;
+
+}
+
+
+.brand p {
+
+    margin: 2px 0 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+}
+
+
+.connection-status {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+}
+
+
+.status-dot {
+
+    width: 9px;
+
+    height: 9px;
+
+    border-radius: 50%;
+
+    display: inline-block;
+
+}
+
+
+.status-dot.online {
+
+    background: var(--green);
+
+}
+
+
+.status-dot.offline {
+
+    background: var(--red);
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.navigation {
+
+    display: flex;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    padding: 15px;
+
+}
+
+
+.nav-btn {
+
+    border: 1px solid var(--border);
+
+    background: rgba(255,255,255,0.04);
+
+    color: var(--muted);
+
+    padding: 10px 20px;
+
+    border-radius: 30px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+
+.nav-btn.active {
+
+    background: rgba(53,196,201,0.15);
+
+    color: var(--teal);
+
+    border-color: var(--teal);
+
+}
+
+
+/* =========================================================
+   VIEWS
+========================================================= */
+
+.view {
+
+    max-width: 1150px;
+
+    margin: auto;
+
+    padding: 10px 20px 50px;
+
+}
+
+
+.hidden {
+
+    display: none !important;
+
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+
+    text-align: center;
+
+    padding: 20px 0;
+
+}
+
+
+.hero h2 {
+
+    margin: 0 0 8px;
+
+    font-size: 28px;
+
+}
+
+
+.hero p {
+
+    color: var(--muted);
+
+    max-width: 600px;
+
+    margin: auto;
+
+    line-height: 1.5;
+
+}
+
+
+/* =========================================================
+   SOS
+========================================================= */
+
+.sos-section {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    padding: 25px 0 35px;
+
+}
+
+
+.sos-ring {
+
+    width: 230px;
+
+    height: 230px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+
+.sos-ring.active {
+
+    animation: pulse 1.8s infinite;
+
+}
+
+
+@keyframes pulse {
+
+    0% {
+
+        box-shadow:
+            0 0 0 0
+            rgba(255,76,59,0.45);
+
+    }
+
+    70% {
+
+        box-shadow:
+            0 0 0 35px
+            rgba(255,76,59,0);
+
+    }
+
+    100% {
+
+        box-shadow:
+            0 0 0 0
+            rgba(255,76,59,0);
+
+    }
+
+}
+
+
+.sos-button {
+
+    width: 180px;
+
+    height: 180px;
+
+    border-radius: 50%;
+
+    border: none;
+
+    background:
+        radial-gradient(
+            circle at 30% 25%,
+            #ff7265,
+            var(--red)
+        );
+
+    color: white;
+
+    font-weight: bold;
+
+    font-size: 30px;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 18px 45px
+        rgba(255,76,59,0.35);
+
+}
+
+
+.sos-button.confirm {
+
+    background:
+        radial-gradient(
+            circle at 30% 25%,
+            #ffd56d,
+            var(--orange)
+        );
+
+    color: #2b1b00;
+
+}
+
+
+.sos-button.active {
+
+    background:
+        radial-gradient(
+            circle at 30% 25%,
+            #ff4c3b,
+            var(--red-dark)
+        );
+
+}
+
+
+.sos-button small {
+
+    display: block;
+
+    margin-top: 6px;
+
+    font-size: 11px;
+
+    font-weight: normal;
+
+}
+
+
+.sos-message {
+
+    color: var(--muted);
+
+    font-size: 14px;
+
+    text-align: center;
+
+    max-width: 400px;
+
+}
+
+
+.cancel-btn {
+
+    display: none;
+
+    margin-top: 10px;
+
+    padding: 9px 20px;
+
+    border-radius: 25px;
+
+    border: 1px solid var(--border);
+
+    background: transparent;
+
+    color: var(--text);
+
+    cursor: pointer;
+
+}
+
+
+.cancel-btn.show {
+
+    display: block;
+
+}
+
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.card {
+
+    background:
+        linear-gradient(
+            180deg,
+            var(--panel),
+            var(--panel-light)
+        );
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    padding: 20px;
+
+    margin-bottom: 15px;
+
+}
+
+
+.card-header {
+
+    margin-bottom: 15px;
+
+}
+
+
+.card-header h3 {
+
+    margin: 0 0 5px;
+
+}
+
+
+.card-header p {
+
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+    line-height: 1.5;
+
+}
+
+
+/* =========================================================
+   EMERGENCY SELECT
+========================================================= */
+
+.emergency-select {
+
+    width: 100%;
+
+    padding: 13px;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--border);
+
+    background: #092132;
+
+    color: var(--text);
+
+    font-size: 14px;
+
+}
+
+
+/* =========================================================
+   OFFLINE
+========================================================= */
+
+.offline-banner {
+
+    display: none;
+
+    padding: 15px;
+
+    border-radius: var(--radius);
+
+    border:
+        1px solid
+        rgba(255,178,56,0.4);
+
+    background:
+        rgba(255,178,56,0.12);
+
+    margin-bottom: 15px;
+
+}
+
+
+.offline-banner.show {
+
+    display: block;
+
+}
+
+
+.offline-banner strong {
+
+    color: var(--orange);
+
+}
+
+
+.offline-banner p {
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+}
+
+
+.fallback-buttons {
+
+    display: flex;
+
+    gap: 10px;
+
+}
+
+
+.fallback-btn {
+
+    flex: 1;
+
+    padding: 11px;
+
+    border-radius: 9px;
+
+    border: 1px solid var(--orange);
+
+    background: transparent;
+
+    color: var(--orange);
+
+    cursor: pointer;
+
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.primary-btn,
+.secondary-btn {
+
+    width: 100%;
+
+    padding: 13px;
+
+    border-radius: 10px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+
+.primary-btn {
+
+    border:
+        1px solid
+        rgba(53,196,201,0.5);
+
+    background:
+        rgba(53,196,201,0.15);
+
+    color: var(--teal);
+
+}
+
+
+.secondary-btn {
+
+    border: 1px solid var(--border);
+
+    background: rgba(255,255,255,0.04);
+
+    color: var(--text);
+
+}
+
+
+/* =========================================================
+   LOCATION
+========================================================= */
+
+.location-warning {
+
+    padding: 12px;
+
+    margin-bottom: 12px;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,76,59,0.12);
+
+    border:
+        1px solid
+        rgba(255,76,59,0.3);
+
+}
+
+
+.location-warning strong {
+
+    color: var(--red);
+
+}
+
+
+.location-warning p {
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+}
+
+
+.coordinates {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap: 10px;
+
+    margin: 15px 0;
+
+}
+
+
+.coordinate-box {
+
+    padding: 13px;
+
+    border-radius: 10px;
+
+    background:
+        rgba(0,0,0,0.15);
+
+    border: 1px solid var(--border);
+
+}
+
+
+.coordinate-box span {
+
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    margin-bottom: 5px;
+
+}
+
+
+.coordinate-box strong {
+
+    font-size: 15px;
+
+}
+
+
+/* =========================================================
+   MAP
+========================================================= */
+
+.map {
+
+    height: 300px;
+
+    width: 100%;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    margin-bottom: 10px;
+
+}
+
+
+.location-status {
+
+    text-align: center;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+}
+
+
+/* =========================================================
+   SOS INFORMATION
+========================================================= */
+
+.info-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    padding: 10px 0;
+
+    border-bottom:
+        1px solid var(--border);
+
+    gap: 10px;
+
+}
+
+
+.info-row span {
+
+    color: var(--muted);
+
+}
+
+
+.info-row strong {
+
+    text-align: right;
+
+}
+
+
+/* =========================================================
+   INFORMATION GRID
+========================================================= */
+
+.info-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap: 12px;
+
+}
+
+
+.info-card {
+
+    padding: 15px;
+
+    border-radius: 12px;
+
+    border: 1px solid var(--border);
+
+    background:
+        rgba(255,255,255,0.025);
+
+}
+
+
+.info-icon {
+
+    font-size: 25px;
+
+}
+
+
+.info-card h4 {
+
+    margin: 8px 0 5px;
+
+}
+
+
+.info-card p {
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    line-height: 1.5;
+
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+
+    text-align: center;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    padding: 30px 0;
+
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+.dashboard-kpis {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    gap: 12px;
+
+    margin-bottom: 15px;
+
+}
+
+
+.kpi-card {
+
+    padding: 18px;
+
+    border-radius: var(--radius);
+
+    border: 1px solid var(--border);
+
+    background: var(--panel);
+
+}
+
+
+.kpi-card strong {
+
+    display: block;
+
+    font-size: 28px;
+
+    color: var(--teal);
+
+}
+
+
+.kpi-card span {
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+}
+
+
+/* =========================================================
+   DASHBOARD GRID
+========================================================= */
+
+.dashboard-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        1.4fr 1fr;
+
+    gap: 15px;
+
+}
+
+
+.dashboard-map-card {
+
+    background: var(--panel);
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    padding: 15px;
+
+}
+
+
+.dashboard-title {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 12px;
+
+}
+
+
+.dashboard-title h2 {
+
+    margin: 0;
+
+    font-size: 18px;
+
+}
+
+
+.dashboard-title span {
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+}
+
+
+.rescue-map {
+
+    width: 100%;
+
+    height: 620px;
+
+    border-radius: 12px;
+
+}
+
+
+/* =========================================================
+   INCIDENT LIST
+========================================================= */
+
+.incident-list {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+    max-height: 350px;
+
+    overflow-y: auto;
+
+}
+
+
+.incident-item {
+
+    width: 100%;
+
+    padding: 12px;
+
+    text-align: left;
+
+    border-radius: 10px;
+
+    border: 1px solid var(--border);
+
+    background:
+        rgba(255,255,255,0.03);
+
+    color: var(--text);
+
+    cursor: pointer;
+
+}
+
+
+.incident-item:hover {
+
+    background:
+        rgba(53,196,201,0.08);
+
+}
+
+
+.incident-item.selected {
+
+    border-color: var(--teal);
+
+    background:
+        rgba(53,196,201,0.12);
+
+}
+
+
+.incident-title {
+
+    font-weight: bold;
+
+    margin-bottom: 4px;
+
+}
+
+
+.incident-sub {
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+}
+
+
+.status-badge {
+
+    display: inline-block;
+
+    padding: 4px 8px;
+
+    border-radius: 20px;
+
+    font-size: 10px;
+
+    margin-top: 6px;
+
+}
+
+
+.status-active {
+
+    color: #ffb0a8;
+
+    background:
+        rgba(255,76,59,0.15);
+
+}
+
+
+.status-ack {
+
+    color: #ffe0a0;
+
+    background:
+        rgba(255,178,56,0.15);
+
+}
+
+
+.status-rescue {
+
+    color: #a9f1f4;
+
+    background:
+        rgba(53,196,201,0.15);
+
+}
+
+
+.status-resolved {
+
+    color: #b7f5cd;
+
+    background:
+        rgba(74,222,128,0.15);
+
+}
+
+
+/* =========================================================
+   DETAIL
+========================================================= */
+
+.detail-actions {
+
+    display: flex;
+
+    gap: 8px;
+
+    flex-wrap: wrap;
+
+    margin-top: 15px;
+
+}
+
+
+.detail-btn {
+
+    flex: 1;
+
+    min-width: 100px;
+
+    padding: 10px;
+
+    border-radius: 8px;
+
+    border: 1px solid var(--border);
+
+    background: rgba(255,255,255,0.04);
+
+    color: var(--text);
+
+    cursor: pointer;
+
+}
+
+
+.detail-btn.primary {
+
+    color: var(--teal);
+
+    border-color: var(--teal);
+
+}
+
+
+.detail-btn.warning {
+
+    color: var(--orange);
+
+    border-color: var(--orange);
+
+}
+
+
+.empty-message {
+
+    padding: 20px;
+
+    text-align: center;
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+}
+
+
+/* =========================================================
+   ASSISTANT
+========================================================= */
+
+.assistant-button {
+
+    position: fixed;
+
+    right: 20px;
+
+    bottom: 20px;
+
+    width: 55px;
+
+    height: 55px;
+
+    border-radius: 50%;
+
+    border: none;
+
+    background: var(--teal);
+
+    font-size: 25px;
+
+    cursor: pointer;
+
+    z-index: 2000;
+
+}
+
+
+.assistant-panel {
+
+    position: fixed;
+
+    right: 20px;
+
+    bottom: 85px;
+
+    width: 320px;
+
+    border-radius: 15px;
+
+    background: var(--panel);
+
+    border: 1px solid var(--border);
+
+    z-index: 2000;
+
+    overflow: hidden;
+
+}
+
+
+.assistant-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    padding: 14px;
+
+    border-bottom:
+        1px solid var(--border);
+
+}
+
+
+.assistant-header button {
+
+    border: none;
+
+    background: none;
+
+    color: var(--muted);
+
+    cursor: pointer;
+
+}
+
+
+.assistant-body {
+
+    padding: 15px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+    line-height: 1.5;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:800px) {
+
+    .dashboard-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .dashboard-kpis {
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+
+    .rescue-map {
+
+        height: 350px;
+
+    }
+
+}
+
+
+@media(max-width:550px) {
+
+    .topbar {
+
+        padding: 12px 15px;
+
+    }
+
+
+    .view {
+
+        padding:
+            5px 12px 40px;
+
+    }
+
+
+    .coordinates {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .info-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+    .sos-button {
+
+        width: 160px;
+
+        height: 160px;
+
+    }
+
+
+    .sos-ring {
+
+        width: 205px;
+
+        height: 205px;
+
+    }
+
+
+    .fallback-buttons {
+
+        flex-direction: column;
+
+    }
+
+
+    .dashboard-kpis {
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+}

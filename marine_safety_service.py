@@ -3,6 +3,8 @@
 import math
 import json
 import os
+import requests
+from datetime import datetime, timezone
 
 
 # ============================================================
@@ -30,6 +32,25 @@ PROTECTED_AREAS_FILE = os.path.join(
 RESTRICTED_AREAS_FILE = os.path.join(
     GEOFENCE_DIR,
     "restricted_areas.geojson"
+)
+
+
+# ============================================================
+# OFFICIAL IMD API
+# ============================================================
+
+IMD_BASE_URL = "https://api.imd.gov.in/api/v1"
+
+IMD_CYCLONE_TRACK_URL = (
+    f"{IMD_BASE_URL}/cyclone_track"
+)
+
+IMD_CYCLONE_WIND_URL = (
+    f"{IMD_BASE_URL}/cyclone_wind"
+)
+
+IMD_CYCLONE_COI_URL = (
+    f"{IMD_BASE_URL}/cyclone_cou"
 )
 
 
@@ -119,8 +140,11 @@ def point_on_segment(px, py, x1, y1, x2, y2):
     if abs(cross) > 1e-9:
         return False
 
-    if min(x1, x2) - 1e-9 <= px <= max(x1, x2) + 1e-9 and \
-       min(y1, y2) - 1e-9 <= py <= max(y1, y2) + 1e-9:
+    if (
+        min(x1, x2) - 1e-9 <= px <= max(x1, x2) + 1e-9
+        and
+        min(y1, y2) - 1e-9 <= py <= max(y1, y2) + 1e-9
+    ):
 
         return True
 
@@ -449,16 +473,374 @@ def check_geojson_zone(
 
 
 # ============================================================
+# HTTP HELPER FOR IMD
+# ============================================================
+
+def fetch_imd_json(url):
+    """
+    Fetch JSON from official IMD API.
+
+    This function is only used for the newly added
+    official-warning layer.
+    """
+
+    try:
+
+        response = requests.get(
+            url,
+            timeout=8
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+
+    except Exception as e:
+
+        print(
+            f"IMD API error: {url} -> {e}"
+        )
+
+        return None
+
+
+# ============================================================
+# OFFICIAL IMD CYCLONE WARNING
+# ============================================================
+
+def get_official_imd_warning(
+    lat,
+    lon
+):
+    """
+    Check the user's exact GPS location against
+    official IMD cyclone warning geometry.
+
+    Existing ORCA outputs are NOT changed.
+
+    This function only adds a new official-warning
+    section to the final response.
+    """
+
+    official_warnings = []
+
+    # --------------------------------------------------------
+    # 1. OFFICIAL IMD CYCLONE WIND WARNING
+    # --------------------------------------------------------
+
+    cyclone_wind_data = fetch_imd_json(
+        IMD_CYCLONE_WIND_URL
+    )
+
+    if cyclone_wind_data:
+
+        wind_data = cyclone_wind_data.get(
+            "data",
+            {}
+        )
+
+        if isinstance(wind_data, dict):
+
+            for wind_level, geometry in wind_data.items():
+
+                if not isinstance(geometry, dict):
+                    continue
+
+                if geometry_contains_point(
+                    lat,
+                    lon,
+                    geometry
+                ):
+
+                    official_warnings.append({
+
+                        "type":
+                            "CYCLONE_WIND_WARNING",
+
+                        "severity":
+                            "OFFICIAL",
+
+                        "warning_level":
+                            wind_level,
+
+                        "message":
+                            (
+                                "Your current GPS location "
+                                "is inside an official IMD "
+                                "cyclone wind warning area."
+                            ),
+
+                        "source":
+                            "India Meteorological Department",
+
+                        "source_url":
+                            IMD_CYCLONE_WIND_URL
+
+                    })
+
+    # --------------------------------------------------------
+    # 2. OFFICIAL IMD CYCLONE CONE
+    # --------------------------------------------------------
+
+    cyclone_cone_data = fetch_imd_json(
+        IMD_CYCLONE_COI_URL
+    )
+
+    if cyclone_cone_data:
+
+        cone_geometry = cyclone_cone_data.get(
+            "data"
+        )
+
+        if isinstance(
+            cone_geometry,
+            dict
+        ):
+
+            if geometry_contains_point(
+                lat,
+                lon,
+                cone_geometry
+            ):
+
+                official_warnings.append({
+
+                    "type":
+                        "CYCLONE_CONE_OF_UNCERTAINTY",
+
+                    "severity":
+                        "OFFICIAL",
+
+                    "message":
+                        (
+                            "Your current GPS location "
+                            "is inside the official IMD "
+                            "cyclone cone of uncertainty."
+                        ),
+
+                    "source":
+                        "India Meteorological Department",
+
+                    "source_url":
+                        IMD_CYCLONE_COI_URL
+
+                })
+
+    # --------------------------------------------------------
+    # 3. OFFICIAL IMD CYCLONE TRACK
+    # --------------------------------------------------------
+
+    cyclone_track_data = fetch_imd_json(
+        IMD_CYCLONE_TRACK_URL
+    )
+
+    closest_cyclone = None
+    closest_distance = None
+
+    if cyclone_track_data:
+
+        track_data = cyclone_track_data.get(
+            "data",
+            {}
+        )
+
+        if isinstance(
+            track_data,
+            dict
+        ):
+
+            all_points = []
+
+            all_points.extend(
+                track_data.get(
+                    "observed",
+                    []
+                )
+            )
+
+            all_points.extend(
+                track_data.get(
+                    "forecast",
+                    []
+                )
+            )
+
+            for point in all_points:
+
+                try:
+
+                    cyclone_lat = float(
+                        point.get("lat")
+                    )
+
+                    cyclone_lon = float(
+                        point.get("lon")
+                    )
+
+                    current_distance = distance_km(
+                        lat,
+                        lon,
+                        cyclone_lat,
+                        cyclone_lon
+                    )
+
+                    if (
+                        closest_distance is None
+                        or
+                        current_distance
+                        <
+                        closest_distance
+                    ):
+
+                        closest_distance = (
+                            current_distance
+                        )
+
+                        closest_cyclone = point
+
+                except (
+                    TypeError,
+                    ValueError
+                ):
+
+                    continue
+
+    # --------------------------------------------------------
+    # Add track warning only when reasonably close.
+    #
+    # This is a location-proximity indication to the
+    # official IMD track, NOT an IMD-defined safety radius.
+    # --------------------------------------------------------
+
+    if (
+        closest_cyclone is not None
+        and
+        closest_distance is not None
+        and
+        closest_distance <= 300
+    ):
+
+        official_warnings.append({
+
+            "type":
+                "CYCLONE_TRACK_PROXIMITY",
+
+            "severity":
+                "OFFICIAL_TRACK",
+
+            "distance_km":
+                closest_distance,
+
+            "cyclone_name":
+                closest_cyclone.get(
+                    "CYCLONE_NAME"
+                ),
+
+            "category":
+                closest_cyclone.get(
+                    "Category"
+                ),
+
+            "message":
+                (
+                    "Your current GPS location "
+                    "is within 300 km of an official "
+                    "IMD cyclone track point."
+                ),
+
+            "source":
+                "India Meteorological Department",
+
+            "source_url":
+                IMD_CYCLONE_TRACK_URL
+
+        })
+
+    # --------------------------------------------------------
+    # FINAL OFFICIAL WARNING RESULT
+    # --------------------------------------------------------
+
+    if official_warnings:
+
+        return {
+
+            "status":
+                "WARNING",
+
+            "source":
+                "India Meteorological Department",
+
+            "official":
+                True,
+
+            "location": {
+
+                "latitude":
+                    lat,
+
+                "longitude":
+                    lon
+
+            },
+
+            "warnings":
+                official_warnings,
+
+            "checked_at":
+                datetime.now(
+                    timezone.utc
+                ).isoformat()
+
+        }
+
+    return {
+
+        "status":
+            "NO_WARNING",
+
+        "source":
+            "India Meteorological Department",
+
+        "official":
+            True,
+
+        "location": {
+
+            "latitude":
+                lat,
+
+            "longitude":
+                lon
+
+        },
+
+        "warnings":
+            [],
+
+        "message":
+            (
+                "No official IMD cyclone warning "
+                "was detected at the current GPS location."
+            ),
+
+        "checked_at":
+            datetime.now(
+                timezone.utc
+            ).isoformat()
+
+    }
+
+
+# ============================================================
 # CYCLONE
 # ============================================================
 
 def check_cyclone(lat, lon):
 
     """
-    Temporary safety engine.
+    Existing ORCA cyclone output.
 
-    Replace with official IMD/INCOIS cyclone
-    warning data when connected.
+    Kept unchanged.
     """
 
     return {
@@ -476,10 +858,9 @@ def check_cyclone(lat, lon):
 def check_lightning(lat, lon):
 
     """
-    Temporary safety engine.
+    Existing ORCA lightning output.
 
-    Replace with official IMD lightning
-    data when connected.
+    Kept unchanged.
     """
 
     return {
@@ -843,6 +1224,10 @@ def get_marine_safety(
     wind_speed=None
 ):
 
+    # ========================================================
+    # EXISTING OUTPUTS
+    # ========================================================
+
     cyclone = check_cyclone(
         lat,
         lon
@@ -883,6 +1268,20 @@ def get_marine_safety(
         geofence
     )
 
+    # ========================================================
+    # NEW:
+    # OFFICIAL IMD WARNING BASED ON USER GPS LOCATION
+    # ========================================================
+
+    official_warning = get_official_imd_warning(
+        lat,
+        lon
+    )
+
+    # ========================================================
+    # EXISTING RESPONSE + ONLY ONE NEW FIELD
+    # ========================================================
+
     return {
 
         "success": True,
@@ -908,6 +1307,12 @@ def get_marine_safety(
 
         "geofence": geofence,
 
-        "recommendation": recommendation
+        "recommendation": recommendation,
+
+        # ====================================================
+        # NEW OFFICIAL WARNING
+        # ====================================================
+
+        "official_warning": official_warning
 
     }

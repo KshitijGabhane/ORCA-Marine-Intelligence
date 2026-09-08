@@ -1,60 +1,69 @@
 from deep_translator import GoogleTranslator
+from langdetect import detect, LangDetectException
 
 
+# Indian languages ORCA supports for replies (ISO 639-1 codes used by
+# deep_translator / GoogleTranslator).
 SUPPORTED_LANGUAGES = {
     "en": "English",
     "hi": "Hindi",
     "mr": "Marathi",
-    "gu": "Gujarati",
     "bn": "Bengali",
     "ta": "Tamil",
     "te": "Telugu",
+    "gu": "Gujarati",
     "kn": "Kannada",
     "ml": "Malayalam",
+    "pa": "Punjabi",
+    "ur": "Urdu",
     "or": "Odia",
-    "pa": "Punjabi"
+    "as": "Assamese",
 }
 
 
-def translate_to_english(text, source_language):
+def detect_language(text):
     """
-    Translate user's question to English.
+    Detect the language of the incoming question so ORCA can reply in
+    that same language, even if the caller didn't pass a language code.
+    Falls back to English if detection fails or the detected language
+    isn't one ORCA supports.
     """
 
-    if not text:
-        return ""
+    if not text or not text.strip():
+        return "en"
 
-    if source_language == "en":
+    try:
+        detected = detect(text)
+    except LangDetectException:
+        return "en"
+
+    if detected in SUPPORTED_LANGUAGES:
+        return detected
+
+    return "en"
+
+
+def translate_to_english(text, language):
+    if language == "en":
         return text
 
     try:
         return GoogleTranslator(
-            source=source_language,
+            source=language,
             target="en"
         ).translate(text)
-
-    except Exception as e:
-        print("Translation to English failed:", e)
+    except Exception:
         return text
 
 
-def translate_from_english(text, target_language):
-    """
-    Translate ORCA answer back to user's language.
-    """
-
-    if not text:
-        return ""
-
-    if target_language == "en":
+def translate_from_english(text, language):
+    if language == "en":
         return text
 
     try:
         return GoogleTranslator(
             source="en",
-            target=target_language
+            target=language
         ).translate(text)
-
-    except Exception as e:
-        print("Translation from English failed:", e)
+    except Exception:
         return text

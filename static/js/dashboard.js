@@ -5043,16 +5043,53 @@ else {
 
 let previousMarineRisk = null;
 
+let marineSafetyRequestRunning = false;
+
+let marineSafetyInterval = null;
+
+
+// ============================================================
+// SAFE VALUE
+// ============================================================
+
+function getMarineSafetyStatus(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        String(value).toLowerCase() === "nan" ||
+        String(value).toLowerCase() === "undefined"
+    ) {
+        return "UNKNOWN";
+    }
+
+    return String(value);
+
+}
+
+
+// ============================================================
+// LOAD MARINE SAFETY
+// ============================================================
 
 async function loadMarineSafety() {
 
-    // Use your existing GPS variables
+    // --------------------------------------------------------
+    // WAIT FOR GPS
+    // --------------------------------------------------------
+
     if (
         typeof currentLatitude === "undefined" ||
         typeof currentLongitude === "undefined"
     ) {
-        console.log("GPS variables not available yet.");
+
+        console.log(
+            "🌊 Marine Safety: GPS variables not available yet."
+        );
+
         return;
+
     }
 
 
@@ -5062,77 +5099,261 @@ async function loadMarineSafety() {
         currentLatitude === undefined ||
         currentLongitude === undefined
     ) {
-        console.log("Waiting for GPS...");
+
+        console.log(
+            "🌊 Marine Safety: Waiting for GPS..."
+        );
+
         return;
+
     }
+
+
+    // --------------------------------------------------------
+    // VALIDATE GPS
+    // --------------------------------------------------------
+
+    const latitude =
+        Number(currentLatitude);
+
+    const longitude =
+        Number(currentLongitude);
+
+
+    if (
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude)
+    ) {
+
+        console.log(
+            "🌊 Marine Safety: Invalid GPS coordinates."
+        );
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // PREVENT OVERLAPPING REQUESTS
+    // --------------------------------------------------------
+
+    if (marineSafetyRequestRunning) {
+
+        console.log(
+            "🌊 Marine Safety: Previous request still running."
+        );
+
+        return;
+
+    }
+
+
+    marineSafetyRequestRunning = true;
 
 
     try {
 
+        // ----------------------------------------------------
+        // API URL
+        // ----------------------------------------------------
+
         const url =
             `/api/marine-safety` +
-            `?lat=${encodeURIComponent(currentLatitude)}` +
-            `&lon=${encodeURIComponent(currentLongitude)}`;
+            `?lat=${encodeURIComponent(latitude)}` +
+            `&lon=${encodeURIComponent(longitude)}`;
 
 
-        const response = await fetch(
-            url,
-            {
-                cache: "no-store"
-            }
+        console.log(
+            "🌊 Marine Safety URL:",
+            url
         );
 
 
-        const data = await response.json();
+        // ----------------------------------------------------
+        // REQUEST
+        // ----------------------------------------------------
 
-
-        if (!response.ok || !data.success) {
-
-            console.error(
-                "Marine safety API error:",
-                data
+        const response =
+            await fetch(
+                url,
+                {
+                    method: "GET",
+                    cache: "no-store",
+                    credentials: "same-origin"
+                }
             );
 
+
+        // ----------------------------------------------------
+        // READ RESPONSE AS TEXT
+        //
+        // This protects the frontend if the backend contains
+        // NaN / Infinity values in ocean data.
+        // ----------------------------------------------------
+
+        const responseText =
+            await response.text();
+
+
+        let data = null;
+
+
+        try {
+
+            const cleanedResponse =
+                responseText
+                    .replace(
+                        /\bNaN\b/g,
+                        "null"
+                    )
+                    .replace(
+                        /\bInfinity\b/g,
+                        "null"
+                    )
+                    .replace(
+                        /\b-Infinity\b/g,
+                        "null"
+                    );
+
+
+            data =
+                JSON.parse(
+                    cleanedResponse
+                );
+
+        }
+
+        catch (jsonError) {
+
+            console.error(
+                "❌ Marine Safety invalid JSON response:",
+                jsonError,
+                responseText
+            );
+
+            updateMarineSafetyUnavailable();
+
             return;
+
         }
 
 
-        updateMarineSafetyUI(data);
+        console.log(
+            "🌊 Marine Safety Data:",
+            data
+        );
 
-        checkMarineSafetyAlert(data);
+
+        // ----------------------------------------------------
+        // API ERROR
+        // ----------------------------------------------------
+
+        if (
+            !response.ok ||
+            !data ||
+            data.success !== true
+        ) {
+
+            console.error(
+                "❌ Marine Safety API error:",
+                data
+            );
+
+            updateMarineSafetyUnavailable();
+
+            return;
+
+        }
+
+
+        // ----------------------------------------------------
+        // UPDATE UI
+        // ----------------------------------------------------
+
+        updateMarineSafetyUI(
+            data
+        );
+
+
+        // ----------------------------------------------------
+        // SAFETY ALERT
+        // ----------------------------------------------------
+
+        checkMarineSafetyAlert(
+            data
+        );
 
     }
+
 
     catch (error) {
 
         console.error(
-            "Marine safety request failed:",
+            "❌ Marine safety request failed:",
             error
         );
 
+
+        updateMarineSafetyUnavailable();
+
     }
+
+
+    finally {
+
+        marineSafetyRequestRunning =
+            false;
+
+    }
+
 }
 
 
 // ============================================================
-// UPDATE UI
+// UPDATE MARINE SAFETY UI
 // ============================================================
 
 function updateMarineSafetyUI(data) {
 
-    const risk = data.risk;
+    if (
+        !data ||
+        !data.success
+    ) {
+
+        updateMarineSafetyUnavailable();
+
+        return;
+
+    }
+
+
+    // ========================================================
+    // OVERALL RISK
+    // ========================================================
+
+    const risk =
+        getMarineSafetyStatus(
+            data.risk
+        );
 
 
     const overallRisk =
-        document.getElementById("overallRisk");
+        document.getElementById(
+            "overallRisk"
+        );
+
 
     const riskIcon =
-        document.getElementById("overallRiskIcon");
+        document.getElementById(
+            "overallRiskIcon"
+        );
 
 
     if (overallRisk) {
 
-        overallRisk.textContent = risk;
+        overallRisk.textContent =
+            risk;
 
     }
 
@@ -5141,127 +5362,213 @@ function updateMarineSafetyUI(data) {
 
         if (risk === "HIGH") {
 
-            riskIcon.textContent = "🔴";
+            riskIcon.textContent =
+                "🔴";
 
         }
 
-        else if (risk === "MODERATE") {
+        else if (
+            risk === "MODERATE"
+        ) {
 
-            riskIcon.textContent = "🟡";
+            riskIcon.textContent =
+                "🟡";
 
         }
 
-        else if (risk === "UNKNOWN") {
+        else if (
+            risk === "UNKNOWN"
+        ) {
 
-            riskIcon.textContent = "⚪";
+            riskIcon.textContent =
+                "⚪";
+
+        }
+
+        else if (
+            risk === "LOW"
+        ) {
+
+            riskIcon.textContent =
+                "🟢";
 
         }
 
         else {
 
-            riskIcon.textContent = "🟢";
+            riskIcon.textContent =
+                "⚪";
 
         }
 
     }
 
 
-    // ----------------------------
+    // ========================================================
     // HAZARDS
-    // ----------------------------
+    // ========================================================
+
+    const hazards =
+        data.hazards || {};
+
 
     const cyclone =
-        document.getElementById("cycloneStatus");
+        document.getElementById(
+            "cycloneStatus"
+        );
+
 
     const lightning =
-        document.getElementById("lightningStatus");
+        document.getElementById(
+            "lightningStatus"
+        );
+
 
     const wave =
-        document.getElementById("waveStatus");
+        document.getElementById(
+            "waveStatus"
+        );
+
 
     const wind =
-        document.getElementById("windStatus");
+        document.getElementById(
+            "windStatus"
+        );
 
+
+    // --------------------------------------------------------
+    // CYCLONE
+    // --------------------------------------------------------
 
     if (cyclone) {
 
         cyclone.textContent =
-            data.hazards.cyclone.status;
+            getMarineSafetyStatus(
+                hazards.cyclone?.status
+            );
 
     }
 
+
+    // --------------------------------------------------------
+    // LIGHTNING
+    // --------------------------------------------------------
 
     if (lightning) {
 
         lightning.textContent =
-            data.hazards.lightning.status;
+            getMarineSafetyStatus(
+                hazards.lightning?.status
+            );
 
     }
 
+
+    // --------------------------------------------------------
+    // WAVES
+    // --------------------------------------------------------
 
     if (wave) {
 
         wave.textContent =
-            data.hazards.wave.status;
+            getMarineSafetyStatus(
+                hazards.wave?.status
+            );
 
     }
 
+
+    // --------------------------------------------------------
+    // WIND
+    // --------------------------------------------------------
 
     if (wind) {
 
         wind.textContent =
-            data.hazards.wind.status;
+            getMarineSafetyStatus(
+                hazards.wind?.status
+            );
 
     }
 
 
-    // ----------------------------
+    // ========================================================
     // GEOFENCE
-    // ----------------------------
+    // ========================================================
+
+    const geofence =
+        data.geofence || {};
+
 
     const boundary =
-        document.getElementById("boundaryStatus");
+        document.getElementById(
+            "boundaryStatus"
+        );
+
 
     const protectedArea =
-        document.getElementById("protectedStatus");
+        document.getElementById(
+            "protectedStatus"
+        );
+
 
     const restrictedArea =
-        document.getElementById("restrictedStatus");
+        document.getElementById(
+            "restrictedStatus"
+        );
 
+
+    // --------------------------------------------------------
+    // INTERNATIONAL BOUNDARY
+    // --------------------------------------------------------
 
     if (boundary) {
 
         boundary.textContent =
-            data.geofence
-                .international_boundary
-                .status;
+            getMarineSafetyStatus(
+                geofence
+                    .international_boundary
+                    ?.status
+            );
 
     }
 
+
+    // --------------------------------------------------------
+    // PROTECTED AREA
+    // --------------------------------------------------------
 
     if (protectedArea) {
 
         protectedArea.textContent =
-            data.geofence
-                .protected_area
-                .status;
+            getMarineSafetyStatus(
+                geofence
+                    .protected_area
+                    ?.status
+            );
 
     }
 
+
+    // --------------------------------------------------------
+    // RESTRICTED AREA
+    // --------------------------------------------------------
 
     if (restrictedArea) {
 
         restrictedArea.textContent =
-            data.geofence
-                .restricted_area
-                .status;
+            getMarineSafetyStatus(
+                geofence
+                    .restricted_area
+                    ?.status
+            );
 
     }
 
 
-    // ----------------------------
+    // ========================================================
     // RECOMMENDATION
-    // ----------------------------
+    // ========================================================
 
     const recommendation =
         document.getElementById(
@@ -5271,15 +5578,29 @@ function updateMarineSafetyUI(data) {
 
     if (recommendation) {
 
-        recommendation.textContent =
-            data.recommendation;
+        if (
+            data.recommendation &&
+            String(data.recommendation).trim() !== ""
+        ) {
+
+            recommendation.textContent =
+                data.recommendation;
+
+        }
+
+        else {
+
+            recommendation.textContent =
+                "Marine safety recommendation unavailable.";
+
+        }
 
     }
 
 
-    // ----------------------------
-    // TIME
-    // ----------------------------
+    // ========================================================
+    // LAST UPDATED
+    // ========================================================
 
     const updated =
         document.getElementById(
@@ -5295,6 +5616,188 @@ function updateMarineSafetyUI(data) {
 
     }
 
+
+    console.log(
+        "✅ Marine Safety UI updated using GPS:",
+        latitudeForLog(),
+        longitudeForLog()
+    );
+
+}
+
+
+// ============================================================
+// GPS VALUES FOR LOGGING
+// ============================================================
+
+function latitudeForLog() {
+
+    if (
+        typeof currentLatitude !== "undefined" &&
+        currentLatitude !== null
+    ) {
+
+        return currentLatitude;
+
+    }
+
+    return "UNKNOWN";
+
+}
+
+
+function longitudeForLog() {
+
+    if (
+        typeof currentLongitude !== "undefined" &&
+        currentLongitude !== null
+    ) {
+
+        return currentLongitude;
+
+    }
+
+    return "UNKNOWN";
+
+}
+
+
+// ============================================================
+// MARINE SAFETY UNAVAILABLE
+// ============================================================
+
+function updateMarineSafetyUnavailable() {
+
+    // --------------------------------------------------------
+    // OVERALL RISK
+    // --------------------------------------------------------
+
+    const overallRisk =
+        document.getElementById(
+            "overallRisk"
+        );
+
+
+    const riskIcon =
+        document.getElementById(
+            "overallRiskIcon"
+        );
+
+
+    if (overallRisk) {
+
+        overallRisk.textContent =
+            "UNKNOWN";
+
+    }
+
+
+    if (riskIcon) {
+
+        riskIcon.textContent =
+            "⚪";
+
+    }
+
+
+    // --------------------------------------------------------
+    // HAZARDS
+    // --------------------------------------------------------
+
+    setMarineSafetyUnknown(
+        "cycloneStatus"
+    );
+
+
+    setMarineSafetyUnknown(
+        "lightningStatus"
+    );
+
+
+    setMarineSafetyUnknown(
+        "waveStatus"
+    );
+
+
+    setMarineSafetyUnknown(
+        "windStatus"
+    );
+
+
+    // --------------------------------------------------------
+    // GEOFENCE
+    // --------------------------------------------------------
+
+    setMarineSafetyUnknown(
+        "boundaryStatus"
+    );
+
+
+    setMarineSafetyUnknown(
+        "protectedStatus"
+    );
+
+
+    setMarineSafetyUnknown(
+        "restrictedStatus"
+    );
+
+
+    // --------------------------------------------------------
+    // RECOMMENDATION
+    // --------------------------------------------------------
+
+    const recommendation =
+        document.getElementById(
+            "safetyRecommendation"
+        );
+
+
+    if (recommendation) {
+
+        recommendation.textContent =
+            "Marine safety data is currently unavailable.";
+
+    }
+
+
+    // --------------------------------------------------------
+    // TIME
+    // --------------------------------------------------------
+
+    const updated =
+        document.getElementById(
+            "safetyLastUpdated"
+        );
+
+
+    if (updated) {
+
+        updated.textContent =
+            "Waiting for marine safety data...";
+
+    }
+
+}
+
+
+// ============================================================
+// SET MARINE SAFETY UNKNOWN
+// ============================================================
+
+function setMarineSafetyUnknown(id) {
+
+    const element =
+        document.getElementById(id);
+
+
+    if (element) {
+
+        element.textContent =
+            "UNKNOWN";
+
+    }
+
 }
 
 
@@ -5304,23 +5807,41 @@ function updateMarineSafetyUI(data) {
 
 function checkMarineSafetyAlert(data) {
 
-    const risk = data.risk;
+    if (
+        !data ||
+        !data.success
+    ) {
+
+        return;
+
+    }
 
 
-    // Don't repeatedly alert for the same risk
+    const risk =
+        getMarineSafetyStatus(
+            data.risk
+        );
+
+
+    // --------------------------------------------------------
+    // Only notify when risk changes to HIGH
+    // --------------------------------------------------------
+
     if (
         risk === "HIGH" &&
         previousMarineRisk !== "HIGH"
     ) {
 
         showMarineSafetyNotification(
-            data.recommendation
+            data.recommendation ||
+            "High marine risk detected."
         );
 
     }
 
 
-    previousMarineRisk = risk;
+    previousMarineRisk =
+        risk;
 
 }
 
@@ -5337,7 +5858,9 @@ function showMarineSafetyNotification(message) {
     );
 
 
-    // Browser notification if permission is available
+    // --------------------------------------------------------
+    // Browser notification
+    // --------------------------------------------------------
 
     if (
         "Notification" in window &&
@@ -5347,7 +5870,8 @@ function showMarineSafetyNotification(message) {
         new Notification(
             "🚨 ORCA Marine Safety Alert",
             {
-                body: message
+                body:
+                    String(message)
             }
         );
 
@@ -5367,26 +5891,121 @@ function initializeMarineSafety() {
     );
 
 
+    // --------------------------------------------------------
+    // Initial attempt
+    // --------------------------------------------------------
+
     loadMarineSafety();
 
 
-    // Check every 10 seconds
+    // --------------------------------------------------------
+    // Prevent duplicate intervals
+    // --------------------------------------------------------
 
-    setInterval(
-        loadMarineSafety,
-        10000
-    );
+    if (marineSafetyInterval !== null) {
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // Refresh every 10 seconds
+    //
+    // The function itself checks whether GPS is available.
+    // Therefore it is safe to start this before GPS gets a fix.
+    // --------------------------------------------------------
+
+    marineSafetyInterval =
+        setInterval(
+            function() {
+
+                loadMarineSafety();
+
+            },
+            10000
+        );
 
 }
 
 
 // ============================================================
-// START
+// START MARINE SAFETY
+// ============================================================
+
+function startMarineSafety() {
+
+    console.log(
+        "🌊 Starting Marine Safety GPS monitoring..."
+    );
+
+
+    // --------------------------------------------------------
+    // Try immediately
+    // --------------------------------------------------------
+
+    loadMarineSafety();
+
+
+    // --------------------------------------------------------
+    // Keep checking until GPS becomes available
+    // --------------------------------------------------------
+
+    const safetyGPSInterval =
+        setInterval(
+            function() {
+
+                if (
+                    typeof currentLatitude !== "undefined" &&
+                    typeof currentLongitude !== "undefined" &&
+                    currentLatitude !== null &&
+                    currentLongitude !== null &&
+                    Number.isFinite(
+                        Number(currentLatitude)
+                    ) &&
+                    Number.isFinite(
+                        Number(currentLongitude)
+                    )
+                ) {
+
+                    loadMarineSafety();
+
+                }
+
+            },
+            5000
+        );
+
+
+    // Store globally so this monitoring loop
+    // is not accidentally started more than once.
+    window.orcaMarineSafetyGPSInterval =
+        safetyGPSInterval;
+
+}
+
+
+// ============================================================
+// START MARINE SAFETY AFTER HTML LOAD
 // ============================================================
 
 document.addEventListener(
     "DOMContentLoaded",
-    function () {
+    function() {
+
+        startMarineSafety();
+
+    }
+);
+
+
+// ============================================================
+// START NORMAL MARINE SAFETY MONITOR
+// ============================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function() {
 
         initializeMarineSafety();
 
